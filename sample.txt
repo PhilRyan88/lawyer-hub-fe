@@ -1,0 +1,41 @@
+TODO
+calendar : court -> under -> cases like rahul , geetha  should be listed down (done)
+case types - > dropdown ->  BA / Crl.MP / CMP / LLP / MC / RC / SC/ ST / OP / OS/ AS / CC / CA / CMA / Crl.A/ EP / FDA/ FD.Prds / FIR / IA / IA (restoration)/ OP MV / RFA / RSA / WP (C) / WP (Crl.) / MAT appeal / to be filed
+opposite party along with case type 
+opposite party counsel 
+role of party - dropdown -> petitioner / respondent/ plaintiff / defendant / decree holder / 
+                judgement debtor / claim petitioner / third party / accused / applicant / respondent / appellant / respondent / complainant/ opposite party / accused / victim / witness / other  async dropdown
+
+
+additional parties for both opposite party and name of party\ (done)
+
+reminder ->  2, 3, 5 days before the next posting date  (whatsapp)
+
+linked cases : on clicking we shud be navigated to that case detail (case no and case type )
+
+client contact  -> client details -> document details -> collected details 
+
+dcoument received date , returned date, submitted date , remark ,name of doc, type of document 
+
+calendar should be the landing
+
+sort for dates
+
+case deletion only for admin
+
+
+total fee -> date of payment , mode of payment , amount , remark
+
+starred cases -> page
+
+
+daily schedule -> note also pdf for the 
+
+Z.A Sukul Khadar & Associates 
+
+highlight missed date table in red 
+after role of party , next field is vakkalath
+
+send message should be restricted to admin alone
+
+
