@@ -19,7 +19,10 @@ import { CustomModal } from "@/components/CustomModal";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { CaseForm } from "../Dashboard/CaseForm";
 import { ContactForm } from "./ContactForm"; // Import new form
+import { ReminderModal } from "@/components/ReminderModal"; // Import
 import { toast } from "sonner";
+
+
 
 export default function CaseDetails() {
     const { id } = useParams();
@@ -40,6 +43,7 @@ export default function CaseDetails() {
 
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isContactModalOpen, setIsContactModalOpen] = useState(false); 
+    const [isReminderModalOpen, setIsReminderModalOpen] = useState(false); // New State
     const [editingHearing, setEditingHearing] = useState<any>(null); 
     
     // Delete Confirmation State
@@ -211,6 +215,12 @@ export default function CaseDetails() {
                         >
                             Client Contacts
                         </TabsTrigger>
+                        <TabsTrigger 
+                            value="linked" 
+                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                        >
+                            Linked Cases
+                        </TabsTrigger>
                         {isAdminOrSuperAdmin && (
                             <TabsTrigger 
                                 value="fees" 
@@ -270,7 +280,12 @@ export default function CaseDetails() {
                              <Button variant="outline" size="sm" className="rounded-full text-sky-600 bg-sky-50 border-sky-100">
                                 <Printer className="h-4 w-4 mr-1" /> Print
                              </Button>
-                             <Button variant="outline" size="sm" className="rounded-full text-sky-600 bg-sky-50 border-sky-100">
+                             <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="rounded-full text-sky-600 bg-sky-50 border-sky-100"
+                                onClick={() => setIsReminderModalOpen(true)}
+                             >
                                 <Bell className="h-4 w-4 mr-1" /> Set Reminder
                              </Button>
                         </div>
@@ -448,6 +463,31 @@ export default function CaseDetails() {
                     </div>
                 </TabsContent>
 
+                <TabsContent value="linked">
+                    <div className="space-y-4">
+                         {(!caseData.linkedCases || caseData.linkedCases.length === 0) && (
+                            <div className="text-center text-muted-foreground py-10 border-2 border-dashed rounded-lg">
+                                No cases linked.
+                            </div>
+                        )}
+                        <div className="grid gap-2">
+                            {caseData.linkedCases?.map((linked: any) => (
+                                <div  
+                                    key={linked._id || linked} 
+                                    className="bg-card p-4 rounded-lg border shadow-sm cursor-pointer hover:bg-accent transition-colors flex justify-between items-center"
+                                    onClick={() => navigate(`/dashboard/case/${linked._id || linked}`)}
+                                >
+                                    <div className="flex flex-col">
+                                        <span className="font-bold text-lg">{linked.caseNo || "No Case Number"}</span>
+                                        <span className="text-sm text-muted-foreground">{linked.nameOfParty || "Unknown Party"}</span>
+                                    </div>
+                                    <ArrowLeft className="h-4 w-4 rotate-180 text-muted-foreground" />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </TabsContent>
+
                 {isAdminOrSuperAdmin && (
                      <TabsContent value="fees">
                         <div className="p-4 text-center text-muted-foreground">Fee Details (Coming Soon)</div>
@@ -466,6 +506,7 @@ export default function CaseDetails() {
                         onSubmit={handleSaveHearing}
                         isLoading={false}
                         isUpdate={true} 
+                        isAddingHearing={isAddingNewHearing}
                     />
                 }
             />
@@ -493,6 +534,11 @@ export default function CaseDetails() {
                 variant="destructive"
             />
 
+            <ReminderModal 
+                isOpen={isReminderModalOpen} 
+                onClose={() => setIsReminderModalOpen(false)} 
+                caseData={caseData} 
+            />
             </div>
         </div>
     );

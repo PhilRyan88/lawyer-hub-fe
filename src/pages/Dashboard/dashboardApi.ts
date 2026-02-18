@@ -9,6 +9,10 @@ export const dashboardApi = api.injectEndpoints({
       }),
       providesTags: ["Cases"],
     }),
+    getAllCasesList: builder.query({
+        query: () => "/cases/list",
+        providesTags: ["Cases"],
+    }),
     getCase: builder.query({
         query: (id) => `/cases/${id}`,
         providesTags: (_result, _error, id) => [{ type: "Cases", id }],
@@ -113,6 +117,7 @@ export const dashboardApi = api.injectEndpoints({
 
 export const {
   useGetCasesQuery,
+  useGetAllCasesListQuery,
   useAddCaseMutation,
   useUpdateCaseMutation,
   useDeleteCaseMutation,
