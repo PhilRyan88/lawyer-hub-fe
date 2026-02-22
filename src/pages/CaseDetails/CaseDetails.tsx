@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { FileText, MessageSquare, Printer, Bell, ArrowLeft, Edit2, Trash, Plus, Phone, MapPin } from "lucide-react";
+import {  MessageSquare, Printer, Bell, ArrowLeft, Edit2, Trash, Plus, Phone, MapPin } from "lucide-react";
 import { 
     useGetCaseQuery, 
     useAddHearingMutation, 
@@ -276,16 +276,14 @@ export default function CaseDetails() {
     const isAdminOrSuperAdmin = role === "ADMIN" || role === "SUPER_ADMIN";
 
     return (
-        <div className="min-h-screen bg-muted/40 pb-10">
-
-            <div className="container mx-auto py-10 px-4">
-                {/* Header / Breadcrumb */}
-                <div className="flex items-center gap-2 mb-6">
-                    <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="hover:bg-muted">
-                        <ArrowLeft className="h-6 w-6" />
-                    </Button>
-                    <h1 className="text-2xl font-bold">Case Details</h1>
-                </div>
+        <div className="space-y-6">
+            {/* Header / Breadcrumb */}
+            <div className="flex items-center gap-2 mb-6">
+                <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="hover:bg-muted">
+                    <ArrowLeft className="h-6 w-6" />
+                </Button>
+                <h1 className="text-2xl font-bold">Case Details</h1>
+            </div>
 
             {/* Tabs */}
             <Tabs defaultValue="hearings" className="w-full">
@@ -351,9 +349,7 @@ export default function CaseDetails() {
 
                         {/* Action Buttons */}
                         <div className="flex gap-2 overflow-x-auto pb-2">
-                             <Button variant="outline" size="sm" className="rounded-full text-sky-600 bg-sky-50 border-sky-100">
-                                <FileText className="h-4 w-4 mr-1" /> Note
-                             </Button>
+                             
                              {/* Generic Send Message acts as shortcut to first contact */}
                              <Button 
                                 variant="outline" 
@@ -659,7 +655,6 @@ export default function CaseDetails() {
                 onClose={() => setIsReminderModalOpen(false)} 
                 caseData={caseData} 
             />
-            </div>
         </div>
     );
 }

@@ -15,7 +15,6 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom"; 
 import { useSelector, useDispatch } from "react-redux";
 import { setPage, setLimit, setSort } from "@/store/slices/dashboardSlice";
-import { CustomTooltip } from "@/components/CustomTooltip";
 import { Badge } from "@/components/ui/badge";
 import { 
     Calendar, User, Scale, Gavel, 
@@ -107,6 +106,8 @@ export default function Dashboard() {
             try {
                 await deleteCase(caseToDelete).unwrap();
                 toast.success("Case deleted");
+                setIsAlertOpen(false);
+                setCaseToDelete(null);
             } catch(error: any) {
                 toast.error("Failed to delete");
             }
@@ -275,97 +276,81 @@ export default function Dashboard() {
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50/50 dark:bg-[#020617] p-4 md:p-8">
-            <div className="max-w-[1600px] mx-auto space-y-6">
-                
-                {/* Header & Controls Section */}
-                <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
-                    <div className="w-full lg:max-w-3xl">
-                        <DashboardFilters 
-                            search={search} 
-                            setSearch={setSearch}
-                            courts={courts} 
-                            selectedCourts={selectedCourts} 
-                            setSelectedCourts={setSelectedCourts}
-                            startDate={startDate} 
-                            setStartDate={setStartDate}
-                            endDate={endDate} 
-                            setEndDate={setEndDate}
-                            onSearch={() => { dispatch(setPage(1)); }}
-                        />
-                    </div>
-
-                    <div className="flex items-center gap-3 shrink-0 self-end lg:self-auto">
-                         <div className="h-10 w-px bg-slate-200 dark:bg-slate-800 hidden lg:block mx-2" />
-                         <CustomTooltip content="Add New Case" side="left">
-                            <Button 
-                                onClick={() => {
-                                    setEditingCase(null);
-                                    setIsModalOpen(true);
-                                }} 
-                                size="icon" 
-                                className="h-12 w-12 rounded-2xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
-                            >
-                                <Plus className="h-6 w-6" />
-                            </Button>
-                         </CustomTooltip>
-                    </div>
+        <div className="space-y-6">
+            {/* Header & Controls Section */}
+            <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between bg-white/50 dark:bg-slate-900/50 p-6 rounded-[24px] border border-slate-200 dark:border-slate-800 backdrop-blur-sm shadow-sm">
+                <div className="w-full lg:max-w-3xl">
+                    <DashboardFilters 
+                        search={search} 
+                        setSearch={setSearch}
+                        courts={courts} 
+                        selectedCourts={selectedCourts} 
+                        setSelectedCourts={setSelectedCourts}
+                        startDate={startDate} 
+                        setStartDate={setStartDate}
+                        endDate={endDate} 
+                        setEndDate={setEndDate}
+                        onSearch={() => { dispatch(setPage(1)); }}
+                    />
                 </div>
 
-                {/* Table Section */}
-                <div className="bg-background rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 shadow-xl shadow-slate-200/20 dark:shadow-none overflow-hidden transition-all duration-500">
-                     {isLoading ? (
-                        <div className="p-20 flex flex-col items-center justify-center gap-4">
-                            <div className="h-12 w-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-                            <p className="text-slate-500 font-bold animate-pulse">Fetching your cases...</p>
-                        </div>
-                     ) : (
-                        <div className="p-2">
-                             <DataTable 
-                                columns={columns} 
-                                data={cases} 
-                                onRowClick={(row) => navigate(`/cases/${row._id}`)}    
-                                pageCount={totalPages}
-                                pageIndex={page}
-                                pageSize={limit}
-                                onPageChange={(p) => dispatch(setPage(p))}
-                                onLimitChange={(l) => dispatch(setLimit(l))}
-                            />
-                        </div>
-                     )}
+                <div className="flex items-center gap-3 shrink-0 self-end lg:self-auto">
+                    <div className="h-10 w-px bg-slate-200 dark:bg-slate-800 hidden lg:block mx-2" />
+                    <Button 
+                        onClick={() => {
+                            setEditingCase(null);
+                            setIsModalOpen(true);
+                        }} 
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground h-11 px-6 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] font-semibold"
+                    >
+                        <Plus className="mr-2 h-5 w-5" />
+                    </Button>
                 </div>
-
-                <CustomModal
-                    isOpen={isModalOpen}
-                    onClose={() => {
-                        setIsModalOpen(false);
-                        setEditingCase(null);
-                    }}
-                    title={editingCase ? "Edit Case" : "Add New Case"}
-                    className="max-w-2xl" 
-                    body={
-                        <CaseForm
-                            initialData={editingCase}
-                            onSubmit={handleSaveCase}
-                            isLoading={false}
-                            isUpdate={!!editingCase}
-                        />
-                    }
-                />
-
-                <ConfirmDialog 
-                    isOpen={isAlertOpen}
-                    onClose={() => {
-                        setIsAlertOpen(false);
-                        setCaseToDelete(null);
-                    }}
-                    onConfirm={confirmDelete}
-                    title="Delete Case"
-                    description="Are you sure you want to delete this case? This action cannot be undone."
-                    confirmLabel="Delete"
-                    variant="destructive"
-                />
             </div>
+
+            {/* Table Section */}
+            <DataTable 
+                columns={columns} 
+                data={cases} 
+                isLoading={isLoading}
+                onRowClick={(row) => navigate(`/cases/${row._id}`)}    
+                pageCount={totalPages}
+                pageIndex={page}
+                pageSize={limit}
+                onPageChange={(p) => dispatch(setPage(p))}
+                onLimitChange={(l) => dispatch(setLimit(l))}
+            />
+
+            {/* Modals */}
+            <CustomModal
+                isOpen={isModalOpen}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setEditingCase(null);
+                }}
+                title={editingCase ? "Edit Case" : "Add New Case Entry"}
+                body={
+                    <CaseForm
+                        initialData={editingCase}
+                        onSubmit={handleSaveCase}
+                        isLoading={false}
+                        isUpdate={!!editingCase}
+                    />
+                }
+            />
+
+            <ConfirmDialog 
+                isOpen={isAlertOpen}
+                onClose={() => {
+                    setIsAlertOpen(false);
+                    setCaseToDelete(null);
+                }}
+                onConfirm={confirmDelete}
+                title="Delete Case Entry"
+                description="Are you sure you want to delete this case? This action cannot be undone."
+                confirmLabel="Delete"
+                variant="destructive"
+            />
         </div>
     );
 }

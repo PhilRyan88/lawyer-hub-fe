@@ -21,12 +21,14 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   onRowClick?: (row: TData) => void;
+  isLoading?: boolean;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   onRowClick,
+  isLoading,
   pageCount,
   pageIndex = 1,
   pageSize,
@@ -36,6 +38,7 @@ export function DataTable<TData, TValue>({
     pageCount?: number;
     pageIndex?: number;
     pageSize?: number;
+    isLoading?: boolean;
     onPageChange?: (page: number) => void;
     onLimitChange?: (limit: number) => void;
 }) {
@@ -68,7 +71,16 @@ export function DataTable<TData, TValue>({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {isLoading ? (
+               <TableRow>
+                 <TableCell colSpan={columns.length} className="h-40 text-center">
+                    <div className="flex flex-col items-center justify-center gap-3">
+                        <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                        <span className="text-sm font-bold text-slate-400 animate-pulse">Loading data...</span>
+                    </div>
+                 </TableCell>
+               </TableRow>
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
