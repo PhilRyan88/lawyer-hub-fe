@@ -14,127 +14,181 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   onRowClick?: (row: TData) => void;
+  isLoading?: boolean;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   onRowClick,
+  isLoading,
   pageCount,
-  pageIndex,
+  pageIndex = 1,
   pageSize,
   onPageChange,
   onLimitChange,
 }: DataTableProps<TData, TValue> & {
     pageCount?: number;
-    pageIndex?: number; // 0-indexed for Tanstack? Our API is 1-indexed. Let's stick to 1-indexed props for simplicity or map it.
+    pageIndex?: number;
     pageSize?: number;
+    isLoading?: boolean;
     onPageChange?: (page: number) => void;
     onLimitChange?: (limit: number) => void;
 }) {
-  // Tanstack Table State
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    // getPaginationRowModel: getPaginationRowModel(), // Disable client-side pagination if server-side is used
-    manualPagination: true, // We are handling pagination manually (server-side)
+    manualPagination: true,
     pageCount: pageCount || -1, 
   })
 
   return (
-    <div>
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                )
-              })}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-                onClick={() => onRowClick && onRowClick(row.original)}
-                className={onRowClick ? "cursor-pointer hover:bg-muted/50" : ""}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
+    <div className="w-full space-y-4">
+      <div className="rounded-[24px] border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-lg shadow-slate-200/50 dark:shadow-none overflow-hidden transition-all">
+        <Table>
+          <TableHeader className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-300 dark:border-slate-800">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id} className="hover:bg-transparent border-none">
+                {headerGroup.headers.map((header) => {
+                  const size = header.column.columnDef.size;
+                  return (
+                    <TableHead 
+                      key={header.id} 
+                      className={cn(
+                        "h-14 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[11px]",
+                        size && size < 100 ? "px-2" : "px-6"
+                      )}
+                      style={{ width: size ? `${size}px` : undefined }}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </div>
-    
-    {/* Pagination Controls */}
-    <div className="flex items-center justify-between py-4">
-        {/* Rows per page */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Rows per page</span>
-            <select 
-                className="h-8 w-16 rounded-md border border-input bg-background px-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                value={pageSize}
-                onChange={(e) => onLimitChange && onLimitChange(Number(e.target.value))}
-            >
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-            </select>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+               <TableRow>
+                 <TableCell colSpan={columns.length} className="h-40 text-center">
+                    <div className="flex flex-col items-center justify-center gap-3">
+                        <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                        <span className="text-sm font-bold text-slate-400 animate-pulse">Loading data...</span>
+                    </div>
+                 </TableCell>
+               </TableRow>
+            ) : table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  onClick={() => onRowClick && onRowClick(row.original)}
+                  className={cn(
+                    "group transition-all duration-200 border-b border-slate-100 dark:border-slate-900 last:border-0",
+                    onRowClick ? "cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/40" : ""
+                  )}
+                >
+                  {row.getVisibleCells().map((cell) => {
+                    const size = cell.column.columnDef.size;
+                    return (
+                      <TableCell 
+                        key={cell.id} 
+                        className={cn(
+                        "py-4",
+                        size && size < 100 ? "px-2" : "px-6"
+                      )}
+                      style={{ width: size ? `${size}px` : undefined }}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-40 text-center text-slate-400 italic">
+                  No cases found matching your search.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      
+      {/* Premium Pagination Section */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-2">
+        <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
+                <span className="text-sm font-bold text-slate-500 dark:text-slate-400">View</span>
+                <select 
+                    className="h-9 w-20 rounded-xl border border-slate-200 dark:border-slate-800 bg-background px-2 text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer hover:border-primary/50"
+                    value={pageSize}
+                    onChange={(e) => onLimitChange && onLimitChange(Number(e.target.value))}
+                >
+                    {[20, 50, 100].map(val => <option key={val} value={val}>{val}</option>)}
+                </select>
+            </div>
+            <div className="hidden sm:block h-4 w-px bg-slate-200 dark:bg-slate-800" />
+            <div className="text-sm font-bold text-slate-500 dark:text-slate-400">
+                Page <span className="text-primary">{pageIndex}</span> of {pageCount}
+            </div>
         </div>
 
-        {/* Page Info & Nav */}
-        <div className="flex items-center gap-4">
-             <div className="text-sm font-medium">
-                Page {pageIndex} of {pageCount}
+        <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900/50 p-1.5 rounded-2xl border border-slate-200/50 dark:border-slate-800/50">
+            <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onPageChange && onPageChange(1)}
+                disabled={pageIndex <= 1}
+                className="h-9 w-9 rounded-xl hover:bg-background hover:text-primary transition-all shadow-sm"
+            >
+                <ChevronsLeft className="h-4 w-4" />
+            </Button>
+            <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onPageChange && onPageChange(pageIndex - 1)}
+                disabled={pageIndex <= 1}
+                className="h-9 w-9 rounded-xl hover:bg-background hover:text-primary transition-all shadow-sm"
+            >
+                <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            <div className="flex items-center px-4 font-bold text-sm min-w-[3rem] justify-center">
+                {pageIndex}
             </div>
-            <div className="flex items-center space-x-2">
-                <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onPageChange && onPageChange((pageIndex || 1) - 1)}
-                disabled={!pageIndex || pageIndex <= 1}
-                >
-                Previous
-                </Button>
-                <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onPageChange && onPageChange((pageIndex || 1) + 1)}
-                disabled={!pageIndex || !pageCount || pageIndex >= pageCount}
-                >
-                Next
-                </Button>
-            </div>
+
+            <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onPageChange && onPageChange(pageIndex + 1)}
+                disabled={!pageCount || pageIndex >= pageCount}
+                className="h-9 w-9 rounded-xl hover:bg-background hover:text-primary transition-all shadow-sm"
+            >
+                <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onPageChange && onPageChange(pageCount || 1)}
+                disabled={!pageCount || pageIndex >= pageCount}
+                className="h-9 w-9 rounded-xl hover:bg-background hover:text-primary transition-all shadow-sm"
+            >
+                <ChevronsRight className="h-4 w-4" />
+            </Button>
         </div>
       </div>
     </div>

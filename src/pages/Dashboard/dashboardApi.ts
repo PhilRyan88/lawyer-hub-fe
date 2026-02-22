@@ -40,6 +40,13 @@ export const dashboardApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Cases"],
     }),
+    toggleStarCase: builder.mutation({
+      query: (id) => ({
+        url: `/cases/${id}/star`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Cases"],
+    }),
     
     // --- Courts ---
     getCourts: builder.query({
@@ -121,6 +128,7 @@ export const {
   useAddCaseMutation,
   useUpdateCaseMutation,
   useDeleteCaseMutation,
+  useToggleStarCaseMutation,
   useGetCourtsQuery,
   useAddCourtMutation,
   useUpdateCourtMutation,

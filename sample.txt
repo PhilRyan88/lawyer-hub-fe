@@ -36,6 +36,6 @@ Z.A Sukul Khadar & Associates
 highlight missed date table in red 
 after role of party , next field is vakkalath
 
-send message should be restricted to admin alone
+
 
 

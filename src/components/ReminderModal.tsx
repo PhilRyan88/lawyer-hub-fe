@@ -23,34 +23,48 @@ export function ReminderModal({ isOpen, onClose, caseData }: ReminderModalProps)
   const [description, setDescription] = useState(
     caseData ? `Hearing for ${caseData.nameOfParty} vs ${caseData.oppositePartyName || 'Opposite Party'}` : ""
   );
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const generateICS = () => {
       if (!title || !date) return;
+      setIsProcessing(true);
       
       const formatDate = (d: Date) => d.toISOString().replace(/-|:|\.\d\d\d/g, "");
-      const start = formatDate(date);
-      const end = formatDate(new Date(date.getTime() + 60 * 60 * 1000)); // 1 hour duration
+      
+      const start = new Date(date);
+      start.setHours(9, 0, 0, 0);
+      
+      const end = new Date(date);
+      end.setHours(12, 0, 0, 0);
+      
+      const startStr = formatDate(start);
+      const endStr = formatDate(end);
       
       const icsContent = `BEGIN:VCALENDAR
 VERSION:2.0
 BEGIN:VEVENT
 URL:${window.location.href}
-DTSTART:${start}
-DTEND:${end}
+DTSTART:${startStr}
+DTEND:${endStr}
 SUMMARY:${title}
 DESCRIPTION:${description}
 END:VEVENT
 END:VCALENDAR`;
 
-      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', 'reminder.ics');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      setTimeout(() => {
+          const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', 'reminder.ics');
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+          setIsProcessing(false);
+          toast.success("Event file downloaded.");
+          onClose();
+      }, 500);
   };
 
   const handleSetReminder = () => {
@@ -59,33 +73,36 @@ END:VCALENDAR`;
       return;
     }
 
-    const userAgent = navigator.userAgent || navigator.vendor;
-    const isIOS = /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    setIsProcessing(true);
 
-    // iOS: Download ICS (Standard way to trigger Native Calendar on iOS Web)
-    if (isIOS) {
-        generateICS();
-        toast.info("Event file downloaded. Tap Open/Add to save.");
+    setTimeout(() => {
+        const userAgent = navigator.userAgent || navigator.vendor;
+        const isIOS = /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+        if (isIOS) {
+            generateICS();
+            return;
+        }
+
+        const start = new Date(date);
+        start.setHours(9, 0, 0, 0);
+        const startTime = start.toISOString().replace(/-|:|\.\d\d\d/g, "");
+
+        const end = new Date(date);
+        end.setHours(12, 0, 0, 0);
+        const endTime = end.toISOString().replace(/-|:|\.\d\d\d/g, "");
+
+        const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
+          title
+        )}&dates=${startTime}/${endTime}&details=${encodeURIComponent(
+          description
+        )}`;
+
+        window.open(googleCalendarUrl, "_blank");
+        toast.success("Opening Google Calendar...");
+        setIsProcessing(false);
         onClose();
-        return;
-    }
-
-    // Android & Desktop: Open Google Calendar Link
-    // This is the most reliable method. On Android, it often prompts to open the App. 
-    // The previous 'intent://' method is often blocked by modern browsers.
-    const startTime = date.toISOString().replace(/-|:|\.\d\d\d/g, "");
-    const endDate = new Date(date.getTime() + 60 * 60 * 1000);
-    const endTime = endDate.toISOString().replace(/-|:|\.\d\d\d/g, "");
-
-    const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
-      title
-    )}&dates=${startTime}/${endTime}&details=${encodeURIComponent(
-      description
-    )}`;
-
-    window.open(googleCalendarUrl, "_blank");
-    toast.success("Opening Google Calendar...");
-    onClose();
+    }, 500);
   };
 
   return (
@@ -122,26 +139,48 @@ END:VCALENDAR`;
         </div>
 
         <div className="flex flex-col gap-2 mt-4">
-            <Button onClick={handleSetReminder} className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2">
-                <Calendar className="h-4 w-4" /> Add to Calendar
+            <Button onClick={handleSetReminder} disabled={isProcessing} className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2 h-11 rounded-xl font-bold">
+                {isProcessing ? (
+                    <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span>Processing...</span>
+                    </div>
+                ) : (
+                    <>
+                        <Calendar className="h-4 w-4" /> Add to Calendar
+                    </>
+                )}
             </Button>
             
             <div className="grid grid-cols-2 gap-2 mt-2">
                  <button 
+                    disabled={isProcessing}
                     onClick={() => {
-                        const startTime = date?.toISOString().replace(/-|:|\.\d\d\d/g, "") || "";
-                        const endDate = date ? new Date(date.getTime() + 60*60*1000) : new Date();
-                        const endTime = endDate.toISOString().replace(/-|:|\.\d\d\d/g, "");
-                        const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startTime}/${endTime}&details=${encodeURIComponent(description)}`;
-                        window.open(url, "_blank");
+                        if (!date) return;
+                        setIsProcessing(true);
+                        setTimeout(() => {
+                            const start = new Date(date);
+                            start.setHours(9, 0, 0, 0);
+                            const startTime = start.toISOString().replace(/-|:|\.\d\d\d/g, "");
+                            
+                            const end = new Date(date);
+                            end.setHours(12, 0, 0, 0);
+                            const endTime = end.toISOString().replace(/-|:|\.\d\d\d/g, "");
+                            
+                            const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startTime}/${endTime}&details=${encodeURIComponent(description)}`;
+                            window.open(url, "_blank");
+                            setIsProcessing(false);
+                            onClose();
+                        }, 500);
                     }} 
-                    className="text-xs text-muted-foreground hover:underline border-r"
+                    className="text-xs text-muted-foreground hover:underline border-r disabled:opacity-50"
                  >
                     Use Google Calendar
                  </button>
                  <button 
+                    disabled={isProcessing}
                     onClick={generateICS} 
-                    className="text-xs text-muted-foreground hover:underline"
+                    className="text-xs text-muted-foreground hover:underline disabled:opacity-50"
                  >
                     Download .ics File
                  </button>

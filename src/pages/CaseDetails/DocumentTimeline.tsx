@@ -1,0 +1,280 @@
+import React, { useState } from "react";
+import { format } from "date-fns";
+import { Trash, Plus, History } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+
+interface Stage {
+  _id: string;
+  name: string;
+  order: number;
+}
+
+interface Document {
+  _id: string;
+  name: string;
+  stage?: Stage | string; // Populated or ID
+  currentLocation?: string;
+  updatedAt: string;
+  history?: any[];
+  type?: any;
+}
+
+interface DocumentTimelineProps {
+  documents: Document[];
+  stages: Stage[];
+  onMoveDocument: (docId: string, stageId: string) => void;
+  onAddStage: (name: string) => void;
+  onDeleteStage?: (id: string) => void;
+  isLoading?: boolean;
+}
+
+export function DocumentTimeline({
+  documents,
+  stages,
+  onMoveDocument,
+  onAddStage,
+  onDeleteStage,
+  isLoading
+}: DocumentTimelineProps) {
+  const [draggedDocId, setDraggedDocId] = useState<string | null>(null);
+  const [newStageName, setNewStageName] = useState("");
+  const [isAddStageOpen, setIsAddStageOpen] = useState(false);
+
+  const handleDragStart = (e: React.DragEvent, docId: string) => {
+    e.dataTransfer.setData("docId", docId);
+    setDraggedDocId(docId);
+  };
+
+  const handleDrop = (e: React.DragEvent, stageId: string) => {
+    e.preventDefault();
+    const docId = e.dataTransfer.getData("docId");
+    if (docId) {
+      onMoveDocument(docId, stageId);
+    }
+    setDraggedDocId(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const groupedDocs = stages.reduce((acc, stage) => {
+    acc[stage._id] = documents.filter(d => 
+        (d.stage && (typeof d.stage === 'object' ? d.stage._id === stage._id : d.stage === stage._id))
+    );
+    return acc;
+  }, {} as Record<string, Document[]>);
+
+  // Catch-all for documents without a valid stage (or new ones)
+  const unassignedDocs = documents.filter(d => !d.stage || (typeof d.stage === 'string' && !stages.find(s => s._id === d.stage)));
+
+  if (isLoading) {
+      return <div className="p-10 text-center text-muted-foreground">Loading timeline...</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Document Timeline</h2>
+        <Popover open={isAddStageOpen} onOpenChange={setIsAddStageOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Plus className="h-4 w-4 mr-2" /> Add Stage
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80">
+            <div className="flex gap-2">
+              <Input 
+                placeholder="Stage Name (e.g. Court)" 
+                value={newStageName}
+                onChange={(e) => setNewStageName(e.target.value)}
+              />
+              <Button onClick={() => {
+                if (newStageName.trim()) {
+                  onAddStage(newStageName);
+                  setNewStageName("");
+                  setIsAddStageOpen(false);
+                }
+              }}>Add</Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      <div className="rounded-xl border bg-muted/30 dark:bg-muted/10 p-4">
+        <ScrollArea className="w-full whitespace-nowrap rounded-lg min-h-[450px]">
+          <div className="flex space-x-6 min-w-max p-4">
+              
+              {/* Unassigned Column (if any) */}
+              {unassignedDocs.length > 0 && (
+                  <div 
+                      className="w-80 shrink-0 bg-muted/40 dark:bg-secondary/10 rounded-xl p-4 border border-dashed border-muted-foreground/20"
+                      onDrop={(e) => handleDrop(e, "")}
+                      onDragOver={handleDragOver}
+                  >
+                      <div className="flex justify-between items-center mb-4">
+                          <span className="font-bold text-muted-foreground uppercase text-[10px] tracking-widest\">Unassigned</span>
+                          <Badge variant="outline" className="bg-background/80 font-mono text-[10px]\">{unassignedDocs.length}</Badge>
+                      </div>
+                       <div className="flex flex-col gap-3">
+                          {unassignedDocs.map(doc => (
+                              <DocumentCard 
+                                  key={doc._id} 
+                                  doc={doc} 
+                                  onDragStart={handleDragStart} 
+                              />
+                          ))}
+                      </div>
+                  </div>
+              )}
+
+              {/* Stages Columns */}
+              {stages.map((stage) => (
+                  <div 
+                      key={stage._id}
+                      className="w-80 shrink-0 bg-background dark:bg-card/50 rounded-xl p-4 border border-border/1000 shadow-lg flex flex-col"
+                      onDrop={(e) => handleDrop(e, stage._id)}
+                      onDragOver={handleDragOver}
+                  >
+                      <div className="flex justify-between items-center mb-4 pb-2 border-b border-border/50">
+                          <div className="flex items-center gap-2">
+                              <span className="font-bold text-foreground/80 uppercase text-[10px] tracking-widest">{stage.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="font-mono text-[10px] bg-muted/80">{groupedDocs[stage._id]?.length || 0}</Badge>
+                               {onDeleteStage && (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-6 w-6 text-muted-foreground/40 hover:text-destructive"
+                                    onClick={() => onDeleteStage(stage._id)}
+                                  >
+                                    <Trash className="h-3.5 w-3.5" />
+                                  </Button>
+                              )}
+                          </div>
+                      </div>
+
+                      <div className="flex flex-col gap-3 min-h-[150px] flex-1">
+                          {groupedDocs[stage._id]?.map(doc => (
+                              <DocumentCard 
+                                  key={doc._id} 
+                                  doc={doc} 
+                                  onDragStart={handleDragStart} 
+                                  isDragging={draggedDocId === doc._id}
+                              />
+                          ))}
+                           {(!groupedDocs[stage._id] || groupedDocs[stage._id].length === 0) && (
+                              <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/20 border-2 border-dashed border-muted-foreground/10 rounded-lg py-8">
+                                  <Plus className="h-6 w-6 mb-1 opacity-20" />
+                                  <span className="text-[10px] font-bold uppercase tracking-tighter opacity-40">Drop here</span>
+                              </div>
+                           )}
+                      </div>
+                  </div>
+              ))}
+              
+              {/* Add Stage Placeholder */}
+              <div 
+                  className="w-16 shrink-0 flex items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/10 hover:border-primary/30 hover:bg-primary/5 cursor-pointer transition-all group"
+                  onClick={() => setIsAddStageOpen(true)}
+              >
+                  <Plus className="h-6 w-6 text-muted-foreground/20 group-hover:text-primary transition-colors" />
+              </div>
+
+          </div>
+          <ScrollBar orientation="horizontal" className="bg-transparent" />
+        </ScrollArea>
+      </div>
+    </div>
+  );
+}
+
+function DocumentCard({ doc, onDragStart, isDragging }: { doc: Document, onDragStart: any, isDragging?: boolean }) {
+    return (
+        <div 
+            draggable 
+            onDragStart={(e) => onDragStart(e, doc._id)}
+            className={cn(
+                "group relative bg-card border rounded-xl p-4 shadow-sm transition-all duration-300 cursor-pointer border-l-4 border-l-primary/70",
+                "hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:scale-[1.02] hover:-translate-y-1 hover:border-l-primary hover:bg-accent/5",
+                isDragging && "opacity-50 ring-2 ring-primary/20 border-dashed scale-95"
+            )}
+        >
+            <div className="flex justify-between items-start mb-3">
+                <h4 className="font-bold text-sm tracking-tight leading-snug text-foreground/90 group-hover:text-primary transition-colors line-clamp-2">
+                    {doc.name}
+                </h4>
+                 <Dialog>
+                    <DialogTrigger asChild>
+                         <Button variant="ghost" size="icon" className="h-6 w-6 -mt-1 -mr-1 text-muted-foreground/30 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors">
+                            <History className="h-3.5 w-3.5" />
+                         </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md rounded-2xl">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                <History className="h-5 w-5 text-primary" />
+                                {doc.name}
+                            </DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-3 bg-muted/50 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Document Type</p>
+                                    <p className="text-sm font-semibold">{doc.type?.name || "Standard Document"}</p>
+                                </div>
+                                <div className="p-3 bg-muted/50 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Last Updated</p>
+                                    <p className="text-sm font-semibold">{format(new Date(doc.updatedAt), "MMM d, yyyy")}</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h5 className="font-bold text-xs uppercase tracking-widest text-muted-foreground mb-4 flex items-center gap-2">
+                                    <div className="h-px flex-1 bg-border" />
+                                    Movement History
+                                    <div className="h-px flex-1 bg-border" />
+                                </h5>
+                                <div className="space-y-6 relative pl-4 ml-1 border-l border-border/60">
+                                    {doc.history?.slice().reverse().map((h: any, i: number) => (
+                                        <div key={i} className="relative">
+                                            <div className="absolute -left-[20.5px] top-1 h-3 w-3 rounded-full bg-primary ring-4 ring-background"></div>
+                                            <p className="text-sm font-bold text-foreground/90">{h.stage?.name || "Initial Registration"}</p>
+                                            <p className="text-[11px] font-medium text-muted-foreground">{format(new Date(h.date), "PPP p")}</p>
+                                            {h.notes && (
+                                                <div className="mt-2 p-2 bg-muted/30 rounded-lg border border-border/50">
+                                                    <p className="text-xs italic text-muted-foreground leading-relaxed">"{h.notes}"</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                    {(!doc.history || doc.history.length === 0) && (
+                                        <div className="text-center py-4 bg-muted/20 rounded-xl border border-dashed">
+                                            <p className="text-xs font-medium text-muted-foreground">No history records found</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </DialogContent>
+                 </Dialog>
+            </div>
+            
+            <div className="flex items-center gap-2">
+                 <Badge variant="outline" className="text-[10px] font-bold px-2 h-5 bg-muted/30 border-muted-foreground/10 text-muted-foreground">
+                    {doc.type?.name || "DOC"}
+                 </Badge>
+                 <span className="text-[10px] font-medium text-muted-foreground/50 ml-auto">
+                    {format(new Date(doc.updatedAt), "MMM d")}
+                 </span>
+            </div>
+        </div>
+    );
+}

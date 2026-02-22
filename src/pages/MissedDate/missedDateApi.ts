@@ -6,9 +6,17 @@ export const missedDateApi = api.injectEndpoints({
         query: ({ page, limit }: { page: number; limit: number }) => `/cases/missed?page=${page}&limit=${limit}`,
         providesTags: ["Cases"],
       }),
+      markMissedAsDone: builder.mutation({
+        query: (id: string) => ({
+            url: `/cases/${id}/missed-done`,
+            method: 'PATCH'
+        }),
+        invalidatesTags: ["Cases"]
+      })
     }),
 });
 
 export const { 
-    useGetMissedDatesQuery
+    useGetMissedDatesQuery,
+    useMarkMissedAsDoneMutation
 } = missedDateApi;

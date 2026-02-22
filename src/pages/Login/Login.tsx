@@ -95,8 +95,13 @@ const formSchema = z.object({
                 )}
               />
               {error && <p className="text-sm text-red-500 text-center">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign In"}
+              <Button type="submit" className="w-full h-11 rounded-xl shadow-lg shadow-primary/20 font-bold" disabled={isLoading}>
+                {isLoading ? (
+                   <div className="flex items-center gap-2">
+                       <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                       <span>Signing in...</span>
+                   </div>
+                ) : "Sign In"}
               </Button>
             </form>
           </Form>
