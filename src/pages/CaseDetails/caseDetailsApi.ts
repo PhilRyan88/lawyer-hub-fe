@@ -98,6 +98,21 @@ export const caseDetailsApi = api.injectEndpoints({
         }),
         invalidatesTags: ["DocumentTypes"],
       }),
+      updateDocumentType: builder.mutation({
+          query: ({ id, ...body }) => ({
+              url: `/document-types/${id}`,
+              method: "PUT",
+              body,
+          }),
+          invalidatesTags: ["DocumentTypes"],
+      }),
+      deleteDocumentType: builder.mutation({
+          query: (id) => ({
+              url: `/document-types/${id}`,
+              method: "DELETE",
+          }),
+          invalidatesTags: ["DocumentTypes"],
+      }),
       // Document Stages
       getDocumentStages: builder.query({
         query: () => `/document-stages`,
@@ -156,6 +171,8 @@ export const {
     useDeleteDocumentMutation,
     useGetDocumentTypesQuery,
     useAddDocumentTypeMutation,
+    useUpdateDocumentTypeMutation,
+    useDeleteDocumentTypeMutation,
     useGetDocumentStagesQuery,
     useAddDocumentStageMutation,
     useDeleteDocumentStageMutation,

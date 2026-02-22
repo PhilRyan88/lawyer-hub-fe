@@ -175,40 +175,40 @@ export default function CalendarPage() {
     return (
         <div className="space-y-6 min-h-[calc(100vh-8rem)] flex flex-col">
             {/* Header */}
-            <div className="bg-white/50 dark:bg-slate-900/50 p-6 rounded-[24px] border border-slate-200 dark:border-slate-800 backdrop-blur-sm shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-2xl bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-sky-600">
-                        <CalendarIcon className="h-6 w-6" />
+            <div className="bg-white/50 dark:bg-slate-900/50 p-4 md:p-6 rounded-[24px] border border-slate-200 dark:border-slate-800 backdrop-blur-sm shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                    <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl md:rounded-2xl bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-sky-600">
+                        <CalendarIcon className="h-5 w-5 md:h-6 md:w-6" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Hearing Calendar</h1>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm">Visual schedule of your court dates</p>
+                        <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Hearing Calendar</h1>
+                        <p className="text-slate-500 dark:text-slate-400 text-xs md:text-sm">Visual schedule of your court dates</p>
                     </div>
                 </div>
                 
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
-                        <Button variant="ghost" size="icon" onClick={prevMonth} className="h-9 w-9 rounded-lg hover:bg-white dark:hover:bg-slate-700 shadow-sm">
+                <div className="flex items-center justify-between w-full md:w-auto gap-4">
+                    <div className="flex-1 md:flex-none flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg md:p-1.5 md:rounded-xl border border-slate-200/50 dark:border-slate-700/50">
+                        <Button variant="ghost" size="icon" onClick={prevMonth} className="h-8 w-8 md:h-9 md:w-9 rounded-md md:rounded-lg hover:bg-white dark:hover:bg-slate-700 shadow-sm">
                             <ChevronLeft className="h-4 w-4" />
                         </Button>
-                        <span className="font-bold w-40 text-center text-base">
+                        <span className="font-bold flex-1 md:w-40 text-center text-sm md:text-base">
                             {format(currentDate, "MMMM yyyy")}
                         </span>
-                        <Button variant="ghost" size="icon" onClick={nextMonth} className="h-9 w-9 rounded-lg hover:bg-white dark:hover:bg-slate-700 shadow-sm">
+                        <Button variant="ghost" size="icon" onClick={nextMonth} className="h-8 w-8 md:h-9 md:w-9 rounded-md md:rounded-lg hover:bg-white dark:hover:bg-slate-700 shadow-sm">
                             <ChevronRight className="h-4 w-4" />
                         </Button>
                     </div>
 
-                    <Button variant="outline" onClick={goToToday} className="rounded-xl border-slate-200 font-bold hover:bg-slate-50 h-10">Today</Button>
+                    <Button variant="outline" onClick={goToToday} className="rounded-lg md:rounded-xl border-slate-200 font-bold hover:bg-slate-50 h-8 md:h-10 text-xs md:text-sm">Today</Button>
                 </div>
             </div>
 
             {/* Calendar Grid */}
-            <div className="bg-white dark:bg-slate-900/20 rounded-[32px] shadow-xl border border-slate-200 dark:border-slate-800 flex-1 flex flex-col overflow-hidden backdrop-blur-sm">
+            <div className="bg-white dark:bg-slate-900/20 rounded-[20px] md:rounded-[32px] shadow-xl border border-slate-200 dark:border-slate-800 flex-1 flex flex-col overflow-hidden backdrop-blur-sm">
                 {/* Week Days Header */}
-                <div className="grid grid-cols-7 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-center py-4">
+                <div className="grid grid-cols-7 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-center py-2 md:py-4">
                     {weekDays.map(day => (
-                        <div key={day} className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] py-1">
+                        <div key={day} className="text-[9px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest md:tracking-[0.2em] py-1">
                             {day}
                         </div>
                     ))}
@@ -225,7 +225,7 @@ export default function CalendarPage() {
                             <div 
                                 key={day.toString()}
                                 className={cn(
-                                    "min-h-[120px] border-b border-r border-slate-100 dark:border-slate-800 p-3 transition-all relative flex flex-col gap-2 cursor-pointer group",
+                                    "min-h-[80px] md:min-h-[120px] border-b border-r border-slate-100 dark:border-slate-800 p-1.5 md:p-3 transition-all relative flex flex-col gap-1 md:gap-2 cursor-pointer group",
                                     !isCurrentMonth ? "bg-slate-50/30 dark:bg-slate-900/10 text-slate-300 dark:text-slate-700" : "hover:bg-sky-50/30 dark:hover:bg-sky-900/5",
                                     isToday && "bg-sky-50 dark:bg-sky-900/20"
                                 )}
@@ -233,22 +233,22 @@ export default function CalendarPage() {
                             >
                                 <div className="flex justify-between items-start">
                                     <span className={cn(
-                                        "text-sm font-black w-8 h-8 flex items-center justify-center rounded-xl",
+                                        "text-xs md:text-sm font-black w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg md:rounded-xl",
                                         isToday ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30" : "text-slate-600 dark:text-slate-400 group-hover:text-primary transition-colors"
                                     )}>
                                         {format(day, dateFormat)}
                                     </span>
                                     {dayEvents.length > 0 && (
-                                        <Badge variant="secondary" className="bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300 border-none font-black text-[10px] px-2 py-0.5 rounded-lg">
+                                        <Badge variant="secondary" className="hidden md:inline-flex bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300 border-none font-black text-[10px] px-2 py-0.5 rounded-lg">
                                             {dayEvents.length} {dayEvents.length === 1 ? 'Case' : 'Cases'}
                                         </Badge>
                                     )}
                                 </div>
 
-                                <div className="flex gap-1.5 mt-auto flex-wrap content-end">
+                                <div className="flex gap-1 md:gap-1.5 mt-auto flex-wrap content-end">
                                     {dayEvents.slice(0, 4).map((e: any, i: number) => (
                                         <div key={i} className={cn(
-                                            "w-2 h-2 rounded-full",
+                                            "w-1.5 h-1.5 md:w-2 md:h-2 rounded-full",
                                             e.type === 'nextDate' ? "bg-rose-400" : "bg-blue-400"
                                         )} title={e.nameOfParty} />
                                     ))}
