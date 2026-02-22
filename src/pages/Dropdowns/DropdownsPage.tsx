@@ -40,6 +40,10 @@ import {
     useGetPartyRolesQuery, useAddPartyRoleMutation, useUpdatePartyRoleMutation, useDeletePartyRoleMutation,
 } from "../Dashboard/dashboardApi";
 
+import {
+    useGetDocumentTypesQuery, useAddDocumentTypeMutation, useUpdateDocumentTypeMutation, useDeleteDocumentTypeMutation
+} from "../CaseDetails/caseDetailsApi";
+
 const DropdownTab = ({
     title,
     data,
@@ -210,6 +214,7 @@ export default function DropdownsPage() {
     const { data: stages = [], isLoading: isStagesLoading } = useGetStagesQuery({});
     const { data: caseTypes = [], isLoading: isCaseTypesLoading } = useGetCaseTypesQuery({});
     const { data: partyRoles = [], isLoading: isPartyRolesLoading } = useGetPartyRolesQuery({});
+    const { data: documentTypes = [], isLoading: isDocumentTypesLoading } = useGetDocumentTypesQuery({});
 
     const [addCourt, { isLoading: isAddingCourt }] = useAddCourtMutation();
     const [updateCourt, { isLoading: isUpdatingCourt }] = useUpdateCourtMutation();
@@ -226,6 +231,10 @@ export default function DropdownsPage() {
     const [addPartyRole, { isLoading: isAddingPartyRole }] = useAddPartyRoleMutation();
     const [updatePartyRole, { isLoading: isUpdatingPartyRole }] = useUpdatePartyRoleMutation();
     const [deletePartyRole, { isLoading: isDeletingPartyRole }] = useDeletePartyRoleMutation();
+
+    const [addDocumentType, { isLoading: isAddingDocumentType }] = useAddDocumentTypeMutation();
+    const [updateDocumentType, { isLoading: isUpdatingDocumentType }] = useUpdateDocumentTypeMutation();
+    const [deleteDocumentType, { isLoading: isDeletingDocumentType }] = useDeleteDocumentTypeMutation();
 
     return (
         <div className="space-y-8">
@@ -254,6 +263,9 @@ export default function DropdownsPage() {
                     </TabsTrigger>
                     <TabsTrigger value="partyrole" className="rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm data-[state=active]:text-primary px-6 py-2.5 font-bold transition-all text-slate-500 flex items-center gap-2">
                         <ShieldCheck className="h-4 w-4" /> Party Roles
+                    </TabsTrigger>
+                    <TabsTrigger value="documenttype" className="rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm data-[state=active]:text-primary px-6 py-2.5 font-bold transition-all text-slate-500 flex items-center gap-2">
+                        <Plus className="h-4 w-4" /> Document Types
                     </TabsTrigger>
                 </TabsList>
 
@@ -303,6 +315,18 @@ export default function DropdownsPage() {
                             isDeleting={isDeletingPartyRole}
                             onAdd={addPartyRole} onUpdate={updatePartyRole} onDelete={deletePartyRole}
                              placeholder="e.g. Plaintiff / Petitioner"
+                        />
+                    </TabsContent>
+
+                    <TabsContent value="documenttype" className="focus-visible:outline-none">
+                        <DropdownTab 
+                            title="Document Type" 
+                            data={documentTypes} 
+                            isLoading={isDocumentTypesLoading}
+                            isSubmitting={isAddingDocumentType || isUpdatingDocumentType}
+                            isDeleting={isDeletingDocumentType}
+                            onAdd={addDocumentType} onUpdate={updateDocumentType} onDelete={deleteDocumentType}
+                            placeholder="e.g. Adhaar Card, Vakalatnama"
                         />
                     </TabsContent>
                 </div>
