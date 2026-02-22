@@ -196,8 +196,8 @@ export function DocumentTimeline({
 
         <DragOverlay dropAnimation={dropAnimation}>
             {activeId && activeDoc ? (
-                <div className="w-80 opacity-90 scale-105 pointer-events-none">
-                    <DocumentCard doc={activeDoc} isOverlay />
+                <div className="w-80 opacity-90 scale-105 pointer-events-none shadow-2xl ring-2 ring-primary/50 rounded-xl">
+                    <DocumentCard doc={activeDoc} />
                 </div>
             ) : null}
         </DragOverlay>
@@ -266,32 +266,31 @@ function DraggableDocument({ doc, isBeingDragged }: { doc: Document, isBeingDrag
         <div 
             ref={setNodeRef} 
             style={style}
-            className="touch-none"
+            {...attributes}
+            {...listeners}
+            className="touch-none select-none"
         >
             <DocumentCard 
                 doc={doc} 
-                isBeingDragged={isBeingDragged} 
-                dragHandleProps={{ ...attributes, ...listeners }} 
+                isBeingDragged={isBeingDragged}
             />
         </div>
     );
 }
 
-function DocumentCard({ doc, isBeingDragged, dragHandleProps, isOverlay }: { doc: Document, isBeingDragged?: boolean, dragHandleProps?: any, isOverlay?: boolean }) {
+function DocumentCard({ doc, isBeingDragged }: { doc: Document, isBeingDragged?: boolean }) {
     return (
         <div 
             className={cn(
                 "group relative bg-card border rounded-xl p-4 shadow-sm border-l-4 border-l-primary/70",
                 "hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:border-l-primary hover:bg-accent/5",
-                !isOverlay && !isBeingDragged && "transition-all duration-300",
-                isBeingDragged && "opacity-50 ring-2 ring-primary/20 border-dashed scale-95",
-                isOverlay && "shadow-2xl ring-2 ring-primary/50"
+                !isBeingDragged && "transition-all duration-300",
+                isBeingDragged && "opacity-50 ring-2 ring-primary/20 border-dashed scale-95"
             )}
         >
             <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                     <div 
-                        {...dragHandleProps} 
                         className="cursor-grab active:cursor-grabbing p-1 -ml-1 rounded hover:bg-muted/50 transition-colors shrink-0"
                     >
                         <GripVertical className="h-4 w-4 text-muted-foreground/30 group-hover:text-muted-foreground/60" />
