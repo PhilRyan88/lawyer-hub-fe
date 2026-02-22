@@ -49,12 +49,12 @@ export function Navbar() {
     )}>
       <div className="flex px-4 md:px-8 items-center justify-between mx-auto max-w-[1600px]">
         {/* Logo Section */}
-        <div className="flex items-center gap-2 group">
+        <div className="flex items-center gap-2 group md:flex-1">
             <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105">
                 <Scale className="h-5 w-5 text-primary" />
             </div>
             <Link to="/dashboard" className="text-xl font-black tracking-tight hover:text-primary transition-colors">
-                LawyerHub
+               Z.A Sukul Khadar & Associates
             </Link>
         </div>
 
@@ -81,7 +81,7 @@ export function Navbar() {
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 md:flex-1 md:justify-end">
           <div className="hidden sm:flex items-center gap-2 pr-2 border-r border-border/50">
             <ModeToggle />
             <CustomTooltip content="Secure Logout" side="bottom">

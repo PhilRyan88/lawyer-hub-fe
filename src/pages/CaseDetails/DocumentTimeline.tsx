@@ -107,81 +107,91 @@ export function DocumentTimeline({
         </Popover>
       </div>
 
-      <ScrollArea className="w-full whitespace-nowrap rounded-md border bg-slate-50/50 dark:bg-muted/10 p-4 min-h-[300px]">
-        <div className="flex space-x-4 min-w-max pb-4">
-            
-            {/* Unassigned Column (if any) */}
-            {unassignedDocs.length > 0 && (
-                <div 
-                    className="w-72 shrink-0 bg-slate-100/50 dark:bg-muted/20 rounded-lg p-3 border-2 border-dashed border-slate-200 dark:border-border"
-                    onDrop={(e) => handleDrop(e, "")} // Handle clearing stage?
-                    onDragOver={handleDragOver}
-                >
-                    <div className="flex justify-between items-center mb-3">
-                        <span className="font-medium text-slate-500 dark:text-muted-foreground">Unassigned</span>
-                        <Badge variant="secondary">{unassignedDocs.length}</Badge>
-                    </div>
-                     <div className="flex flex-col gap-2">
-                        {unassignedDocs.map(doc => (
-                            <DocumentCard 
-                                key={doc._id} 
-                                doc={doc} 
-                                onDragStart={handleDragStart} 
-                            />
-                        ))}
-                    </div>
-                </div>
-            )}
+      <div className="rounded-xl border bg-muted/30 dark:bg-muted/10 p-4">
+        <ScrollArea className="w-full whitespace-nowrap rounded-lg min-h-[450px]">
+          <div className="flex space-x-6 min-w-max p-4">
+              
+              {/* Unassigned Column (if any) */}
+              {unassignedDocs.length > 0 && (
+                  <div 
+                      className="w-80 shrink-0 bg-muted/40 dark:bg-secondary/10 rounded-xl p-4 border border-dashed border-muted-foreground/20"
+                      onDrop={(e) => handleDrop(e, "")}
+                      onDragOver={handleDragOver}
+                  >
+                      <div className="flex justify-between items-center mb-4">
+                          <span className="font-bold text-muted-foreground uppercase text-[10px] tracking-widest\">Unassigned</span>
+                          <Badge variant="outline" className="bg-background/80 font-mono text-[10px]\">{unassignedDocs.length}</Badge>
+                      </div>
+                       <div className="flex flex-col gap-3">
+                          {unassignedDocs.map(doc => (
+                              <DocumentCard 
+                                  key={doc._id} 
+                                  doc={doc} 
+                                  onDragStart={handleDragStart} 
+                              />
+                          ))}
+                      </div>
+                  </div>
+              )}
 
-            {/* Stages Columns */}
-            {stages.map((stage) => (
-                <div 
-                    key={stage._id}
-                    className="w-80 shrink-0 bg-white dark:bg-card rounded-lg p-3 shadow-sm border"
-                    onDrop={(e) => handleDrop(e, stage._id)}
-                    onDragOver={handleDragOver}
-                >
-                    <div className="flex justify-between items-center mb-3 pb-2 border-b">
-                        <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-700 dark:text-card-foreground uppercase text-sm tracking-wide">{stage.name}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <Badge variant="secondary" className="bg-slate-100 dark:bg-muted">{groupedDocs[stage._id]?.length || 0}</Badge>
-                             {onDeleteStage && (
-                                <Trash className="h-4 w-4 text-slate-300 hover:text-red-500 cursor-pointer" onClick={() => onDeleteStage(stage._id)} />
-                            )}
-                        </div>
-                    </div>
+              {/* Stages Columns */}
+              {stages.map((stage) => (
+                  <div 
+                      key={stage._id}
+                      className="w-80 shrink-0 bg-background dark:bg-card/50 rounded-xl p-4 border border-border/1000 shadow-lg flex flex-col"
+                      onDrop={(e) => handleDrop(e, stage._id)}
+                      onDragOver={handleDragOver}
+                  >
+                      <div className="flex justify-between items-center mb-4 pb-2 border-b border-border/50">
+                          <div className="flex items-center gap-2">
+                              <span className="font-bold text-foreground/80 uppercase text-[10px] tracking-widest">{stage.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="font-mono text-[10px] bg-muted/80">{groupedDocs[stage._id]?.length || 0}</Badge>
+                               {onDeleteStage && (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-6 w-6 text-muted-foreground/40 hover:text-destructive"
+                                    onClick={() => onDeleteStage(stage._id)}
+                                  >
+                                    <Trash className="h-3.5 w-3.5" />
+                                  </Button>
+                              )}
+                          </div>
+                      </div>
 
-                    <div className="flex flex-col gap-3 min-h-[100px]">
-                        {groupedDocs[stage._id]?.map(doc => (
-                            <DocumentCard 
-                                key={doc._id} 
-                                doc={doc} 
-                                onDragStart={handleDragStart} 
-                                isDragging={draggedDocId === doc._id}
-                            />
-                        ))}
-                         {(!groupedDocs[stage._id] || groupedDocs[stage._id].length === 0) && (
-                            <div className="h-full flex items-center justify-center text-slate-300 text-xs italic py-4">
-                                Drop here
-                            </div>
-                         )}
-                    </div>
-                </div>
-            ))}
-            
-            {/* Add Stage Placeholder */}
-            <div 
-                className="w-16 shrink-0 flex items-center justify-center rounded-lg border-2 border-dashed border-slate-200 dark:border-border hover:border-sky-400 dark:hover:border-sky-500 hover:bg-sky-50 dark:hover:bg-sky-950/30 cursor-pointer transition-colors"
-                onClick={() => setIsAddStageOpen(true)}
-            >
-                <Plus className="h-6 w-6 text-slate-300 dark:text-muted-foreground" />
-            </div>
+                      <div className="flex flex-col gap-3 min-h-[150px] flex-1">
+                          {groupedDocs[stage._id]?.map(doc => (
+                              <DocumentCard 
+                                  key={doc._id} 
+                                  doc={doc} 
+                                  onDragStart={handleDragStart} 
+                                  isDragging={draggedDocId === doc._id}
+                              />
+                          ))}
+                           {(!groupedDocs[stage._id] || groupedDocs[stage._id].length === 0) && (
+                              <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/20 border-2 border-dashed border-muted-foreground/10 rounded-lg py-8">
+                                  <Plus className="h-6 w-6 mb-1 opacity-20" />
+                                  <span className="text-[10px] font-bold uppercase tracking-tighter opacity-40">Drop here</span>
+                              </div>
+                           )}
+                      </div>
+                  </div>
+              ))}
+              
+              {/* Add Stage Placeholder */}
+              <div 
+                  className="w-16 shrink-0 flex items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/10 hover:border-primary/30 hover:bg-primary/5 cursor-pointer transition-all group"
+                  onClick={() => setIsAddStageOpen(true)}
+              >
+                  <Plus className="h-6 w-6 text-muted-foreground/20 group-hover:text-primary transition-colors" />
+              </div>
 
-        </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+          </div>
+          <ScrollBar orientation="horizontal" className="bg-transparent" />
+        </ScrollArea>
+      </div>
     </div>
   );
 }
@@ -192,46 +202,78 @@ function DocumentCard({ doc, onDragStart, isDragging }: { doc: Document, onDragS
             draggable 
             onDragStart={(e) => onDragStart(e, doc._id)}
             className={cn(
-                "group relative bg-white dark:bg-card border rounded-md p-3 shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing border-l-4 border-l-sky-500 dark:border-l-sky-500",
-                isDragging && "opacity-50 ring-2 ring-sky-500 border-dashed"
+                "group relative bg-card border rounded-xl p-4 shadow-sm transition-all duration-300 cursor-pointer border-l-4 border-l-primary/70",
+                "hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:scale-[1.02] hover:-translate-y-1 hover:border-l-primary hover:bg-accent/5",
+                isDragging && "opacity-50 ring-2 ring-primary/20 border-dashed scale-95"
             )}
         >
-            <div className="flex justify-between items-start mb-2">
-                <h4 className="font-semibold text-sm line-clamp-2">{doc.name}</h4>
+            <div className="flex justify-between items-start mb-3">
+                <h4 className="font-bold text-sm tracking-tight leading-snug text-foreground/90 group-hover:text-primary transition-colors line-clamp-2">
+                    {doc.name}
+                </h4>
                  <Dialog>
                     <DialogTrigger asChild>
-                         <Button variant="ghost" size="icon" className="h-5 w-5 -mt-1 -mr-1 text-slate-400 hover:text-sky-600">
-                            <History className="h-3 w-3" />
+                         <Button variant="ghost" size="icon" className="h-6 w-6 -mt-1 -mr-1 text-muted-foreground/30 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors">
+                            <History className="h-3.5 w-3.5" />
                          </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="max-w-md rounded-2xl">
                         <DialogHeader>
-                            <DialogTitle>Details & History: {doc.name}</DialogTitle>
+                            <DialogTitle className="flex items-center gap-2">
+                                <History className="h-5 w-5 text-primary" />
+                                {doc.name}
+                            </DialogTitle>
                         </DialogHeader>
-                        <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                                <div><span className="text-muted-foreground">Type:</span> {doc.type?.name || "N/A"}</div>
+                        <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-3 bg-muted/50 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Document Type</p>
+                                    <p className="text-sm font-semibold">{doc.type?.name || "Standard Document"}</p>
+                                </div>
+                                <div className="p-3 bg-muted/50 rounded-xl">
+                                    <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Last Updated</p>
+                                    <p className="text-sm font-semibold">{format(new Date(doc.updatedAt), "MMM d, yyyy")}</p>
+                                </div>
                             </div>
                             
-                            <h5 className="font-semibold border-b pb-1 mt-4">Movement History</h5>
-                            <div className="space-y-3 relative pl-4 border-l-2 border-slate-200 ml-1">
-                                {doc.history?.slice().reverse().map((h: any, i: number) => (
-                                    <div key={i} className="relative">
-                                        <div className="absolute -left-[21px] top-1 h-3 w-3 rounded-full bg-sky-500 border-2 border-white ring-1 ring-slate-200"></div>
-                                        <p className="text-sm font-medium">{h.stage?.name || "Initial"}</p>
-                                        <p className="text-xs text-muted-foreground">{format(new Date(h.date), "PPP p")}</p>
-                                        {h.notes && <p className="text-xs italic text-slate-500 mt-1">"{h.notes}"</p>}
-                                    </div>
-                                ))}
-                                {(!doc.history || doc.history.length === 0) && <p className="text-sm text-muted-foreground">No history yet.</p>}
+                            <div>
+                                <h5 className="font-bold text-xs uppercase tracking-widest text-muted-foreground mb-4 flex items-center gap-2">
+                                    <div className="h-px flex-1 bg-border" />
+                                    Movement History
+                                    <div className="h-px flex-1 bg-border" />
+                                </h5>
+                                <div className="space-y-6 relative pl-4 ml-1 border-l border-border/60">
+                                    {doc.history?.slice().reverse().map((h: any, i: number) => (
+                                        <div key={i} className="relative">
+                                            <div className="absolute -left-[20.5px] top-1 h-3 w-3 rounded-full bg-primary ring-4 ring-background"></div>
+                                            <p className="text-sm font-bold text-foreground/90">{h.stage?.name || "Initial Registration"}</p>
+                                            <p className="text-[11px] font-medium text-muted-foreground">{format(new Date(h.date), "PPP p")}</p>
+                                            {h.notes && (
+                                                <div className="mt-2 p-2 bg-muted/30 rounded-lg border border-border/50">
+                                                    <p className="text-xs italic text-muted-foreground leading-relaxed">"{h.notes}"</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                    {(!doc.history || doc.history.length === 0) && (
+                                        <div className="text-center py-4 bg-muted/20 rounded-xl border border-dashed">
+                                            <p className="text-xs font-medium text-muted-foreground">No history records found</p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </DialogContent>
                  </Dialog>
             </div>
             
-            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1 flex-wrap">
-                 <Badge variant="outline" className="text-[10px] px-1 h-5">{doc.type?.name || "Doc"}</Badge>
+            <div className="flex items-center gap-2">
+                 <Badge variant="outline" className="text-[10px] font-bold px-2 h-5 bg-muted/30 border-muted-foreground/10 text-muted-foreground">
+                    {doc.type?.name || "DOC"}
+                 </Badge>
+                 <span className="text-[10px] font-medium text-muted-foreground/50 ml-auto">
+                    {format(new Date(doc.updatedAt), "MMM d")}
+                 </span>
             </div>
         </div>
     );

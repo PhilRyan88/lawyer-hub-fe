@@ -110,7 +110,7 @@ const DropdownTab = ({
                     <p className="text-sm text-slate-500">Manage available options for {title.toLowerCase()}s</p>
                  </div>
                  <Button onClick={() => handleOpenModal()} className="rounded-xl h-11 px-6 font-bold shadow-lg shadow-primary/20 bg-primary">
-                    <Plus className="h-5 w-5 mr-1.5" /> New {title}
+                    <Plus className="h-5 w-5 mr-1.5" /> Add
                  </Button>
             </div>
 

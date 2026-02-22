@@ -4,6 +4,7 @@ import { Plus, Edit, Trash2, ShieldCheck, ShieldBan, Users } from "lucide-react"
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { CustomModal } from "@/components/CustomModal";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { UserForm } from "./UserForm";
 import { useGetUsersQuery, useAddUserMutation, useUpdateUserMutation, useDeleteUserMutation, useToggleUserAccessMutation } from "./usersApi";
 import { useSelector, useDispatch } from "react-redux";
@@ -29,11 +30,13 @@ export default function UserListing() {
 
   const [addUser, { isLoading: isAdding }] = useAddUserMutation();
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
-  const [deleteUser] = useDeleteUserMutation();
+  const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
   const [toggleAccess, { isLoading: isToggling }] = useToggleUserAccessMutation();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
   const handleCreate = async (data: any) => {
     try {
@@ -57,14 +60,15 @@ export default function UserListing() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this user?")) {
-        try {
-            await deleteUser(id).unwrap();
-            toast.success("User deleted");
-        } catch (error: any) {
-            toast.error(error?.data?.message || "Failed to delete user");
-        }
+  const confirmDelete = async () => {
+    if (!userToDelete) return;
+    try {
+        await deleteUser(userToDelete).unwrap();
+        toast.success("User deleted");
+        setIsDeleteDialogOpen(false);
+        setUserToDelete(null);
+    } catch (error: any) {
+        toast.error(error?.data?.message || "Failed to delete user");
     }
   }
 
@@ -85,6 +89,11 @@ export default function UserListing() {
   const openEditModal = (user: User) => {
       setEditingUser(user);
       setIsModalOpen(true);
+  }
+
+  const startDelete = (id: string) => {
+      setUserToDelete(id);
+      setIsDeleteDialogOpen(true);
   }
 
   const columns: ColumnDef<User>[] = [
@@ -135,7 +144,7 @@ export default function UserListing() {
             <Button variant="ghost" size="icon" onClick={() => openEditModal(row.original)} className="h-8 w-8 rounded-lg text-slate-400 hover:text-primary">
               <Edit className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => handleDelete(row.original._id)} className="h-8 w-8 rounded-lg text-slate-400 hover:text-destructive text-destructive">
+            <Button variant="ghost" size="icon" onClick={() => startDelete(row.original._id)} className="h-8 w-8 rounded-lg text-slate-400 hover:text-destructive text-destructive">
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
@@ -157,7 +166,7 @@ export default function UserListing() {
                     </div>
                 </div>
                 <Button onClick={openAddModal} className="rounded-xl h-11 px-6 font-bold shadow-lg shadow-primary/20 transition-all active:scale-95">
-                    <Plus className="mr-2 h-5 w-5" /> Add New User
+                    <Plus className="mr-2 h-5 w-5" /> Add 
                 </Button>
             </div>
 
@@ -183,6 +192,20 @@ export default function UserListing() {
                         isLoading={isAdding || isUpdating}
                     />
                 }
+            />
+
+            <ConfirmDialog 
+                isOpen={isDeleteDialogOpen}
+                onClose={() => {
+                    setIsDeleteDialogOpen(false);
+                    setUserToDelete(null);
+                }}
+                onConfirm={confirmDelete}
+                title="Delete User"
+                description="Are you sure you want to delete this user? This action cannot be undone."
+                confirmLabel="Delete User"
+                variant="destructive"
+                isLoading={isDeleting}
             />
         </div>
   );
