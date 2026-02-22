@@ -157,8 +157,13 @@ export function UserForm({ initialData, onSubmit, isLoading }: UserFormProps) {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Saving..." : (initialData ? "Update User" : "Create User")}
+        <Button type="submit" className="w-full h-11 rounded-xl shadow-lg shadow-primary/20 font-bold" disabled={isLoading}>
+          {isLoading ? (
+             <div className="flex items-center gap-2">
+                 <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                 <span>Saving...</span>
+             </div>
+          ) : (initialData ? "Update User" : "Create User")}
         </Button>
       </form>
     </Form>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import {  MessageSquare, Printer, Bell, ArrowLeft, Edit2, Trash, Plus, Phone, MapPin } from "lucide-react";
+import {  MessageSquare, Printer, Bell, ArrowLeft, Edit2, Trash, Plus, Phone, MapPin, Scale, Hash, Calendar as CalendarIcon, User, Info, Gavel } from "lucide-react";
 import { 
     useGetCaseQuery, 
     useAddHearingMutation, 
@@ -17,7 +17,10 @@ import {
     useDeleteDocumentMutation,
     useGetDocumentStagesQuery,
     useAddDocumentStageMutation,
-    useDeleteDocumentStageMutation
+    useDeleteDocumentStageMutation,
+    useGetFeeQuery,
+    useAddOrUpdateFeeMutation,
+    useDeletePaymentMutation
 } from "./caseDetailsApi";
 
 import { Button } from "@/components/ui/button";
@@ -30,7 +33,8 @@ import { ContactForm } from "./ContactForm";
 import { ReminderModal } from "@/components/ReminderModal"; 
 import { DocumentTimeline } from "./DocumentTimeline"; // Import Timeline
 import { toast } from "sonner";
-
+import { generateCasePDF } from "@/utils/pdfGenerator";
+import { AddEditFee } from "./AddEditFee";
 
 
 export default function CaseDetails() {
@@ -39,17 +43,17 @@ export default function CaseDetails() {
     const { data: caseData, isLoading, isError } = useGetCaseQuery(id);
     
 
-    const [addHearing] = useAddHearingMutation();
-    const [updateHearing] = useUpdateHearingMutation();
-    const [deleteHearing] = useDeleteHearingMutation();
+    const [addHearing, { isLoading: isAddingHearingMutation }] = useAddHearingMutation();
+    const [updateHearing, { isLoading: isUpdatingHearing }] = useUpdateHearingMutation();
+    const [deleteHearing, { isLoading: isDeletingHearing }] = useDeleteHearingMutation();
 
 
     const { data: contacts = [], isLoading: isContactsLoading } = useGetContactsQuery(id, {
         skip: !id, 
     });
-    const [addContact] = useAddContactMutation();
-    const [updateContact] = useUpdateContactMutation();
-    const [deleteContact] = useDeleteContactMutation();
+    const [addContact, { isLoading: isAddingContact }] = useAddContactMutation();
+    const [updateContact, { isLoading: isUpdatingContact }] = useUpdateContactMutation();
+    const [deleteContact, { isLoading: isDeletingContact }] = useDeleteContactMutation();
 
     const { data: documents = [], isLoading: isDocumentsLoading } = useGetDocumentsQuery(id, { skip: !id });
     const { data: stages = [], isLoading: isStagesLoading } = useGetDocumentStagesQuery({});
@@ -57,7 +61,11 @@ export default function CaseDetails() {
     const [updateDocument] = useUpdateDocumentMutation();
     const [addStage] = useAddDocumentStageMutation();
     const [deleteStage] = useDeleteDocumentStageMutation();
-    const [deleteDocument] = useDeleteDocumentMutation();
+    const [deleteDocument, { isLoading: isDeletingDoc }] = useDeleteDocumentMutation();
+
+    const { data: feeData, isLoading: isFeeLoading } = useGetFeeQuery(id, { skip: !id });
+    const [addOrUpdateFee, { isLoading: isFeeSubmitting }] = useAddOrUpdateFeeMutation();
+    const [deletePayment] = useDeletePaymentMutation();
 
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isContactModalOpen, setIsContactModalOpen] = useState(false); 
@@ -138,6 +146,7 @@ export default function CaseDetails() {
            particulars: lastHearing?.particulars || caseData.particulars,
            stage: lastHearing?.stage || caseData.stage,
            notes: "",
+           vakkalath: lastHearing?.vakkalath || caseData.vakkalath,
            // New Fields
            caseType: lastHearing?.caseType || caseData.caseType,
            roleOfParty: lastHearing?.roleOfParty || caseData.roleOfParty,
@@ -258,8 +267,28 @@ export default function CaseDetails() {
                 await deleteContact(id).unwrap();
                 toast.success("Contact deleted");
             }
+            // Close modal after success
+            setDeleteConfirmation({ isOpen: false, type: null, id: null });
         } catch (err) {
             toast.error("Failed to delete item");
+        }
+    };
+    
+    const handleSaveFee = async (data: any) => {
+        try {
+            await addOrUpdateFee(data).unwrap();
+            toast.success("Fee record updated");
+        } catch (err) {
+            toast.error("Failed to update fee record");
+        }
+    };
+
+    const handleDeletePayment = async (paymentId: string) => {
+        try {
+            await deletePayment({ caseId: id, paymentId }).unwrap();
+            toast.success("Payment record removed");
+        } catch (err) {
+            toast.error("Failed to delete payment");
         }
     };
     
@@ -276,19 +305,24 @@ export default function CaseDetails() {
     const isAdminOrSuperAdmin = role === "ADMIN" || role === "SUPER_ADMIN";
 
     return (
-        <div className="space-y-6">
+        <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 p-4 sm:p-8 rounded-[48px] border border-white dark:border-slate-900 shadow-inner space-y-8">
             {/* Header / Breadcrumb */}
-            <div className="flex items-center gap-2 mb-6">
-                <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="hover:bg-muted">
-                    <ArrowLeft className="h-6 w-6" />
-                </Button>
-                <h1 className="text-2xl font-bold">Case Details</h1>
+            <div className="flex items-center justify-between mb-8 px-4">
+                <div className="flex items-center gap-4">
+                    <Button variant="outline" size="icon" onClick={() => navigate(-1)} className="hover:bg-white rounded-2xl h-12 w-12 border-slate-200 shadow-sm bg-white dark:bg-slate-900 dark:border-slate-800">
+                        <ArrowLeft className="h-5 w-5" />
+                    </Button>
+                    <div>
+                        <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Case Details</h1>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Management Console</p>
+                    </div>
+                </div>
             </div>
 
             {/* Tabs */}
             <Tabs defaultValue="hearings" className="w-full">
-                <div className="mb-4">
-                    <TabsList className="w-full justify-start rounded-md bg-transparent p-0 h-auto border-b">
+                <div className="mb-4 overflow-x-auto scrollbar-hide">
+                    <TabsList className="flex w-max min-w-full justify-start rounded-none bg-transparent p-0 h-auto border-b">
                         <TabsTrigger 
                             value="hearings" 
                             className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
@@ -328,111 +362,178 @@ export default function CaseDetails() {
                     {/* ... (rest of hearings content) */}
 
                     {/* Main Case Card */}
-                    <div className="bg-card rounded-lg p-6 shadow-sm border space-y-6">
-                        <div className="flex justify-center mb-4">
-                            <h2 className="text-lg font-semibold text-sky-500">Case Details</h2>
-                        </div>
+                    <div className="relative bg-[#fdfeff] dark:bg-slate-900 rounded-[32px] overflow-hidden shadow-2xl shadow-sky-900/15 border border-slate-200/60 dark:border-slate-800/60 space-y-0">
+                        {/* Top Accent Bar */}
+                        <div className="absolute top-0 left-0 w-full h-1.5 bg-sky-500 shadow-sm" />
                         
-                        <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-2">
-                                <span className="font-semibold">Case Status:</span>
-                                <Badge variant="outline" className="text-sky-500 border-sky-500 rounded-full px-4">Active</Badge> 
-                            </div>
-                            <Button 
+                        {/* Premium Header */}
+                        <div className="bg-gradient-to-br from-sky-100/40 via-white to-white dark:from-slate-800/50 dark:to-slate-900 p-4 pt-6 border-b border-slate-100 dark:border-slate-800">
+                            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-xl bg-sky-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/30">
+                                        <Scale className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-black text-slate-800 dark:text-white leading-tight">Case Overview</h2>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Live Status: Active</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <Button 
                                     size="sm" 
-                                    className="bg-sky-500 hover:bg-sky-600 text-white"
+                                    className="bg-sky-500 hover:bg-sky-600 text-white rounded-xl px-6 h-10 shadow-lg shadow-sky-500/20 active:scale-[0.98] transition-all font-bold"
                                     onClick={startUpdateCase}
                                 >
                                     <Edit2 className="h-4 w-4 mr-2" /> Update Case
-                            </Button>
+                                </Button>
+                            </div>
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex gap-2 overflow-x-auto pb-2">
-                             
-                             {/* Generic Send Message acts as shortcut to first contact */}
-                             <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="rounded-full text-sky-600 bg-sky-50 border-sky-100"
-                                onClick={() => {
-                                    if (contacts && contacts.length > 0) {
-                                        // specific requirement: "use that contact for texting in whatsapp"
-                                        // We default to the first one for this shortcut button
-                                        window.open(`https://wa.me/${contacts[0].whatsappNo}`, '_blank');
-                                    } else {
-                                        toast.warning("Client contact isn't added");
-                                    }
-                                }}
-                             >
-                                <MessageSquare className="h-4 w-4 mr-1" /> Send Message
-                             </Button>
-                             <Button variant="outline" size="sm" className="rounded-full text-sky-600 bg-sky-50 border-sky-100">
-                                <Printer className="h-4 w-4 mr-1" /> Print
-                             </Button>
-                             <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="rounded-full text-sky-600 bg-sky-50 border-sky-100"
-                                onClick={() => setIsReminderModalOpen(true)}
-                             >
-                                <Bell className="h-4 w-4 mr-1" /> Set Reminder
-                             </Button>
-                        </div>
-
-                        {/* Case Info Grid */}
-                        <div className="grid grid-cols-2 gap-y-6 gap-x-4">
-                            {/* Case No & Type */}
-                            <div>
-                                <div className="flex items-center gap-2">
-                                    <p className="font-bold text-lg">{caseData.caseNo}</p>
-                                    {caseData.caseType && <Badge variant="secondary" className="text-xs">{caseData.caseType}</Badge>}
-                                </div>
-                                <p className="text-xs text-muted-foreground">Case No.</p>
-                            </div>
-                            
-                            {/* Next Date */}
-                            <div className="text-right">
-                                <p className="font-bold text-lg">{safeFormatDate(caseData.nextDate)}</p>
-                                <p className="text-xs text-muted-foreground">Next Date</p>
-                            </div>
-
-                            {/* Party & Role */}
-                            <div className="col-span-2 text-center my-2 border-b pb-4">
-                                <p className="font-bold text-xl">{caseData.nameOfParty}</p>
-                                <div className="flex items-center justify-center gap-2">
-                                    <p className="text-xs text-muted-foreground">Name of Party</p>
-                                    {caseData.roleOfParty && <span className="text-xs font-medium text-sky-600">({caseData.roleOfParty})</span>}
-                                </div>
-                                {caseData.additionalParties && (
-                                    <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{caseData.additionalParties}</p>
+                        <div className="p-4 space-y-4">
+                            {/* Action Toolbar */}
+                            <div className="flex flex-wrap gap-2 pb-3 border-b border-slate-50 dark:border-slate-800/50">
+                                {/* Generic Send Message acts as shortcut to first contact */}
+                                {isAdminOrSuperAdmin && (
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="rounded-xl px-4 text-sky-600 bg-sky-50 hover:bg-sky-100 border-sky-100 dark:bg-sky-900/20 dark:border-sky-800 dark:text-sky-400 font-bold"
+                                        onClick={() => {
+                                            if (contacts && contacts.length > 0) {
+                                                window.open(`https://wa.me/${contacts[0].whatsappNo}`, '_blank');
+                                            } else {
+                                                toast.warning("Client contact isn't added");
+                                            }
+                                        }}
+                                    >
+                                        <MessageSquare className="h-4 w-4 mr-1.5" /> WhatsApp
+                                    </Button>
                                 )}
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="rounded-xl px-4 text-slate-600 bg-slate-50 hover:bg-slate-100 border-slate-100 dark:bg-slate-800/50 dark:border-slate-700 dark:text-slate-300 font-bold"
+                                    onClick={() => {
+                                        toast.info("Generating Case Report PDF...");
+                                        generateCasePDF(caseData, contacts, documents, stages);
+                                    }}
+                                >
+                                    <Printer className="h-4 w-4 mr-1.5" /> Export PDF
+                                </Button>
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="rounded-xl px-4 text-rose-600 bg-rose-50 hover:bg-rose-100 border-rose-100 dark:bg-rose-900/20 dark:border-rose-900/50 dark:text-rose-400 font-bold ml-auto"
+                                    onClick={() => setIsReminderModalOpen(true)}
+                                >
+                                    <Bell className="h-4 w-4 mr-1.5" /> Reminder
+                                </Button>
                             </div>
 
-                            {/* Opposite Party Section */}
-                            {(caseData.oppositePartyName || caseData.oppositeCounselName) && (
-                                <div className="col-span-2 grid grid-cols-2 gap-4 bg-slate-50 p-2 rounded-md mb-2">
-                                    <div>
-                                         <p className="font-medium">{caseData.oppositePartyName || "-"}</p>
-                                         <p className="text-xs text-muted-foreground">Opposite Party</p>
-                                         {caseData.additionalOppositeParties && (
-                                             <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{caseData.additionalOppositeParties}</p>
-                                         )}
-                                    </div>
-                                    <div className="text-right">
-                                         <p className="font-medium">{caseData.oppositeCounselName || "-"}</p>
-                                         <p className="text-xs text-muted-foreground">Opposite Counsel</p>
+                            {/* Case Info Grid */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {/* Case No & Type */}
+                                <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-800 transition-all hover:border-sky-200 dark:hover:border-sky-900 group">
+                                    <div className="flex flex-col gap-1">
+                                        <div className="flex items-center ">
+                                            <span className="font-bold text-slate-800 dark:text-white  transition-colors e">Case no : &nbsp;</span>
+                                            <p className="font-black text-2xl text-slate-800 dark:text-white  transition-colors uppercase">{caseData.caseNo}</p>
+                                            <Hash className="h-5 w-5 text-slate-300" />
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-[10px] font-bold text-slate-400  tracking-[0.2em]">Case Type</p>
+                                            {caseData.caseType && <Badge variant="secondary" className="text-[10px] font-black bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300 rounded-lg">{caseData.caseType}</Badge>}
+                                        </div>
                                     </div>
                                 </div>
-                            )}
+                                
+                                {/* Next Date */}
+                                <div className="bg-rose-50/30 dark:bg-rose-900/10 p-3 rounded-2xl border border-rose-100 dark:border-rose-900/30">
+                                    <div className="flex flex-col gap-1">
+                                        <div className="flex items-center justify-between">
+                                            <p className="font-black text-2xl text-rose-500 dark:text-rose-400 italic">{safeFormatDate(caseData.nextDate)}</p>
+                                            <CalendarIcon className="h-5 w-5 text-rose-200" />
+                                        </div>
+                                        <p className="text-[10px] font-bold text-rose-300 dark:text-rose-900/50 uppercase tracking-[0.2em]">Next Hearing Session</p>
+                                    </div>
+                                </div>
+                            
+                                {/* Party & Role */}
+                                <div className="col-span-1 sm:col-span-2 relative">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-transparent rounded-[24px] pointer-events-none" />
+                                    <div className="text-center py-4 px-4 bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+                                        <div className="h-2 w-full absolute top-0 left-0 bg-sky-500/10" />
+                                        <p className="font-black text-2xl text-slate-900 dark:text-white mb-1 tracking-tight">{caseData.nameOfParty}</p>
+                                        <div className="flex items-center justify-center flex-wrap gap-3">
+                                            <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 dark:bg-slate-800 rounded-full border border-slate-100 dark:border-slate-700">
+                                                <User className="h-3 w-3 text-slate-400" />
+                                                <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase">Client Profile</span>
+                                            </div>
+                                            {caseData.roleOfParty && (
+                                                <Badge variant="outline" className="text-[10px] border-sky-200 text-sky-600 bg-sky-50 rounded-lg font-black uppercase shadow-sm">
+                                                    Role: {caseData.roleOfParty}
+                                                </Badge>
+                                            )}
+                                            {caseData.vakkalath && (
+                                                <Badge variant="outline" className="text-[10px] border-amber-200 text-amber-600 bg-amber-50 rounded-lg font-black uppercase shadow-sm">
+                                                    Vak: {caseData.vakkalath}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        {caseData.additionalParties && (
+                                            <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl italic">
+                                                <p className="text-sm text-slate-500 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">"{caseData.additionalParties}"</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
 
-                            <div>
-                                <p className="font-medium">{caseData.particulars || "-"}</p>
-                                <p className="text-xs text-muted-foreground">Particular</p>
-                            </div>
-                             <div className="text-right">
-                                <p className="font-medium">{caseData.courtName}</p>
-                                <p className="text-xs text-muted-foreground">Court Name</p>
+                                {/* Opposite Party Section */}
+                                {(caseData.oppositePartyName || caseData.oppositeCounselName) && (
+                                    <div className="col-span-1 sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-0 overflow-hidden rounded-[24px] border border-rose-100 dark:border-rose-900/20 shadow-sm shadow-rose-500/5">
+                                        <div className="bg-rose-50/40 dark:bg-rose-900/5 p-3 border-b sm:border-b-0 sm:border-r border-rose-100 dark:border-rose-900/20 relative">
+                                            <div className="flex flex-col gap-1">
+                                                <p className="font-black text-lg text-slate-800 dark:text-slate-200 leading-tight">{caseData.oppositePartyName || "N/A"}</p>
+                                                <p className="text-[10px] uppercase font-black text-rose-400 tracking-widest flex items-center gap-1.5">
+                                                    <span className="h-1 w-1 rounded-full bg-rose-400" /> Opposite Party
+                                                </p>
+                                                {caseData.additionalOppositeParties && (
+                                                    <p className="text-xs text-slate-500 mt-2 italic border-l-2 border-rose-200 pl-3">"{caseData.additionalOppositeParties}"</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="bg-white dark:bg-slate-900/20 p-3 flex flex-col justify-center">
+                                            <div className="sm:text-right flex flex-col gap-1">
+                                                <p className="font-black text-lg text-slate-800 dark:text-slate-200 leading-tight">{caseData.oppositeCounselName || "Not Recorded"}</p>
+                                                <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Counsel for Defense</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Particulars */}
+                                <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-800 transition-all hover:border-sky-200 dark:hover:border-sky-900 group">
+                                    <div className="flex flex-col gap-1">
+                                        <div className="flex items-center justify-between">
+                                            <p className="font-bold text-slate-700 dark:text-slate-300 text-sm leading-relaxed line-clamp-2">{caseData.particulars || "No specific details available."}</p>
+                                            <Info className="h-5 w-5 text-slate-300" />
+                                        </div>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Particulars</p>
+                                    </div>
+                                </div>
+
+                                {/* Case Initiation */}
+                                <div className="bg-sky-50/30 dark:bg-sky-900/10 p-3 rounded-2xl border border-sky-100 dark:border-sky-800/50">
+                                    <div className="flex flex-col gap-1">
+                                        <div className="flex items-center justify-between">
+                                            <p className="font-black text-2xl text-slate-800 dark:text-white uppercase">{safeFormatDate(caseData.registrationDate)}</p>
+                                            <Gavel className="h-5 w-5 text-sky-200" />
+                                        </div>
+                                        <p className="text-[10px] font-bold text-sky-400 uppercase tracking-[0.2em]">Case Initiation</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -452,7 +553,7 @@ export default function CaseDetails() {
                                     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                                 }
                             }}
-                            className={`bg-card rounded-lg shadow-sm border overflow-hidden ${isHighlighted ? 'border-blue-500 ring-2 ring-blue-200' : ''}`}
+                            className={`bg-card rounded-lg shadow-sm border overflow-hidden ${isHighlighted ? 'border-red-500 ring-2 ring-red-200' : ''}`}
                         >
                             <div className="bg-sky-50 p-2 px-4 flex justify-between items-center border-b border-sky-100">
                                 <div className="flex items-center gap-2">
@@ -527,36 +628,50 @@ export default function CaseDetails() {
                             </div>
                         )}
 
-                        <div className="grid gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {contacts.map((contact: any) => (
-                                <div key={contact._id} className="bg-card rounded-lg p-4 shadow-sm border flex justify-between items-start">
-                                    <div className="space-y-2">
-                                        <div className="flex items-center gap-2">
-                                            <MessageSquare className="h-4 w-4 text-green-500" />
-                                            <span className="font-semibold text-lg">{contact.whatsappNo}</span>
-                                            <Badge variant="secondary" className="text-xs bg-green-50 text-green-700 hover:bg-green-100 cursor-pointer" onClick={() => openWhatsApp(contact.whatsappNo)}>
-                                                WhatsApp
+                                <div key={contact._id} className="bg-card rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col h-full hover:shadow-md transition-shadow">
+                                    <div className="flex-1 space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <div className="bg-green-100 p-2 rounded-full">
+                                                    <MessageSquare className="h-4 w-4 text-green-600" />
+                                                </div>
+                                                <span className="font-bold text-lg text-slate-800">{contact.whatsappNo}</span>
+                                            </div>
+                                            <Badge 
+                                                variant="secondary" 
+                                                className="text-[10px] bg-green-50 text-green-700 hover:bg-green-100 cursor-pointer uppercase font-black" 
+                                                onClick={() => openWhatsApp(contact.whatsappNo)}
+                                            >
+                                                Chat
                                             </Badge>
                                         </div>
-                                        {contact.alternativeNo && (
-                                            <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                                                <Phone className="h-3 w-3" />
-                                                <span>Alt: {contact.alternativeNo}</span>
-                                            </div>
-                                        )}
-                                        {contact.address && (
-                                            <div className="flex items-start gap-2 text-muted-foreground text-sm mt-2">
-                                                <MapPin className="h-3 w-3 mt-0.5" />
-                                                <span>{contact.address}</span>
-                                            </div>
-                                        )}
+                                        
+                                        <div className="space-y-2 pt-2">
+                                            {contact.alternativeNo && (
+                                                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                                                    <Phone className="h-3 w-3" />
+                                                    <span>Alt: {contact.alternativeNo}</span>
+                                                </div>
+                                            )}
+                                            {contact.address && (
+                                                <div className="flex items-start gap-2 text-muted-foreground text-sm">
+                                                    <MapPin className="h-3 w-3 mt-1 shrink-0" />
+                                                    <span className="line-clamp-2">{contact.address}</span>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                    <Button variant="ghost" size="icon" className="hover:text-red-500 text-slate-400" onClick={() => handleDeleteContact(contact._id)}>
-                                        <Trash className="h-4 w-4" />
-                                    </Button>
-                                    <Button variant="ghost" size="icon" className="hover:text-sky-500 text-slate-400" onClick={() => startEditContact(contact)}>
-                                        <Edit2 className="h-4 w-4" />
-                                    </Button>
+                                    
+                                    <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-50">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-red-500 hover:bg-red-50 rounded-lg text-slate-400" onClick={() => handleDeleteContact(contact._id)}>
+                                            <Trash className="h-4 w-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-sky-500 hover:bg-sky-50 rounded-lg text-slate-400" onClick={() => startEditContact(contact)}>
+                                            <Edit2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -599,11 +714,27 @@ export default function CaseDetails() {
                     />
                 </TabsContent>
 
-                {isAdminOrSuperAdmin && (
-                     <TabsContent value="fees">
-                        <div className="p-4 text-center text-muted-foreground">Fee Details (Coming Soon)</div>
-                    </TabsContent>
-                )}
+                 {isAdminOrSuperAdmin && (
+                      <TabsContent value="fees">
+                         <div className="bg-card rounded-2xl p-6 border shadow-sm">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                                <span className="bg-primary/10 p-2 rounded-lg text-primary">₹</span>
+                                Fee Management
+                            </h2>
+                            {isFeeLoading ? (
+                                <div className="text-center py-10">Loading fee details...</div>
+                            ) : (
+                                <AddEditFee 
+                                    caseId={id!} 
+                                    feeData={feeData} 
+                                    onSubmit={handleSaveFee}
+                                    onDeletePayment={handleDeletePayment}
+                                    isLoading={isFeeSubmitting}
+                                />
+                            )}
+                         </div>
+                     </TabsContent>
+                 )}
             </Tabs>
 
              {/* Update/Edit Hearing Modal */}
@@ -615,7 +746,7 @@ export default function CaseDetails() {
                      <CaseForm
                         initialData={editingHearing || caseData}
                         onSubmit={handleSaveHearing}
-                        isLoading={false}
+                        isLoading={isAddingHearingMutation || isUpdatingHearing}
                         isUpdate={true} 
                         isAddingHearing={isAddingNewHearing}
                     />
@@ -635,7 +766,7 @@ export default function CaseDetails() {
                         initialData={editingContact}
                         documents={editingContact ? documents.filter((d: any) => d.contactId === editingContact._id) : []}
                         onSubmit={handleSaveContact}
-                        isLoading={false}
+                        isLoading={isAddingContact || isUpdatingContact}
                     />
                 }
             />
@@ -644,6 +775,7 @@ export default function CaseDetails() {
                 isOpen={deleteConfirmation.isOpen}
                 onClose={() => setDeleteConfirmation({ isOpen: false, type: null, id: null })}
                 onConfirm={confirmDeleteAction}
+                isLoading={isDeletingHearing || isDeletingContact || isDeletingDoc}
                 title={deleteConfirmation.type === 'hearing' ? "Delete Hearing?" : "Delete Contact?"}
                 description="Are you sure you want to delete this item? This action cannot be undone."
                 confirmLabel="Delete"

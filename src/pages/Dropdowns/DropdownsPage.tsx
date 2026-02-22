@@ -44,6 +44,8 @@ const DropdownTab = ({
     title,
     data,
     isLoading,
+    isSubmitting,
+    isDeleting,
     onAdd,
     onUpdate,
     onDelete,
@@ -93,10 +95,10 @@ const DropdownTab = ({
             try {
                 await onDelete(deleteConfirmation.id).unwrap();
                 toast.success("Deleted successfully");
+                setDeleteConfirmation({ isOpen: false, id: null });
             } catch (error: any) {
                 toast.error("Failed to delete");
             }
-            setDeleteConfirmation({ isOpen: false, id: null });
         }
     }
 
@@ -175,8 +177,13 @@ const DropdownTab = ({
                                 )}
                             />
                             <DialogFooter>
-                                <Button type="submit" className="w-full h-12 rounded-xl text-base font-bold shadow-lg shadow-primary/20">
-                                    {editingItem ? "Update Entry" : "Create Entry"}
+                                <Button type="submit" disabled={isSubmitting} className="w-full h-12 rounded-xl text-base font-bold shadow-lg shadow-primary/20">
+                                    {isSubmitting ? (
+                                         <div className="flex items-center gap-2">
+                                            <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            <span>Processing...</span>
+                                         </div>
+                                    ) : (editingItem ? "Update Entry" : "Create Entry")}
                                 </Button>
                             </DialogFooter>
                         </form>
@@ -188,6 +195,7 @@ const DropdownTab = ({
                 isOpen={deleteConfirmation.isOpen}
                 onClose={() => setDeleteConfirmation({ isOpen: false, id: null })}
                 onConfirm={handleDelete}
+                isLoading={isDeleting}
                 title={`Delete ${title}`}
                 description="Are you sure you want to delete this item? This action cannot be undone."
                 confirmLabel="Delete"
@@ -203,21 +211,21 @@ export default function DropdownsPage() {
     const { data: caseTypes = [], isLoading: isCaseTypesLoading } = useGetCaseTypesQuery({});
     const { data: partyRoles = [], isLoading: isPartyRolesLoading } = useGetPartyRolesQuery({});
 
-    const [addCourt] = useAddCourtMutation();
-    const [updateCourt] = useUpdateCourtMutation();
-    const [deleteCourt] = useDeleteCourtMutation();
+    const [addCourt, { isLoading: isAddingCourt }] = useAddCourtMutation();
+    const [updateCourt, { isLoading: isUpdatingCourt }] = useUpdateCourtMutation();
+    const [deleteCourt, { isLoading: isDeletingCourt }] = useDeleteCourtMutation();
 
-    const [addStage] = useAddStageMutation();
-    const [updateStage] = useUpdateStageMutation();
-    const [deleteStage] = useDeleteStageMutation();
+    const [addStage, { isLoading: isAddingStage }] = useAddStageMutation();
+    const [updateStage, { isLoading: isUpdatingStage }] = useUpdateStageMutation();
+    const [deleteStage, { isLoading: isDeletingStage }] = useDeleteStageMutation();
 
-    const [addCaseType] = useAddCaseTypeMutation();
-    const [updateCaseType] = useUpdateCaseTypeMutation();
-    const [deleteCaseType] = useDeleteCaseTypeMutation();
+    const [addCaseType, { isLoading: isAddingCaseType }] = useAddCaseTypeMutation();
+    const [updateCaseType, { isLoading: isUpdatingCaseType }] = useUpdateCaseTypeMutation();
+    const [deleteCaseType, { isLoading: isDeletingCaseType }] = useDeleteCaseTypeMutation();
 
-    const [addPartyRole] = useAddPartyRoleMutation();
-    const [updatePartyRole] = useUpdatePartyRoleMutation();
-    const [deletePartyRole] = useDeletePartyRoleMutation();
+    const [addPartyRole, { isLoading: isAddingPartyRole }] = useAddPartyRoleMutation();
+    const [updatePartyRole, { isLoading: isUpdatingPartyRole }] = useUpdatePartyRoleMutation();
+    const [deletePartyRole, { isLoading: isDeletingPartyRole }] = useDeletePartyRoleMutation();
 
     return (
         <div className="space-y-8">
@@ -255,6 +263,8 @@ export default function DropdownsPage() {
                             title="Court" 
                             data={courts} 
                             isLoading={isCourtsLoading}
+                            isSubmitting={isAddingCourt || isUpdatingCourt}
+                            isDeleting={isDeletingCourt}
                             onAdd={addCourt} onUpdate={updateCourt} onDelete={deleteCourt}
                             placeholder="e.g. High Court Of Karnataka"
                         />
@@ -265,6 +275,8 @@ export default function DropdownsPage() {
                             title="Stage" 
                             data={stages} 
                             isLoading={isStagesLoading}
+                            isSubmitting={isAddingStage || isUpdatingStage}
+                            isDeleting={isDeletingStage}
                             onAdd={addStage} onUpdate={updateStage} onDelete={deleteStage}
                              placeholder="e.g. Cross Examination"
                         />
@@ -275,6 +287,8 @@ export default function DropdownsPage() {
                             title="Case Type" 
                             data={caseTypes} 
                             isLoading={isCaseTypesLoading}
+                            isSubmitting={isAddingCaseType || isUpdatingCaseType}
+                            isDeleting={isDeletingCaseType}
                             onAdd={addCaseType} onUpdate={updateCaseType} onDelete={deleteCaseType}
                              placeholder="e.g. Civil Suit (Original)"
                         />
@@ -285,6 +299,8 @@ export default function DropdownsPage() {
                             title="Party Role" 
                             data={partyRoles} 
                             isLoading={isPartyRolesLoading}
+                            isSubmitting={isAddingPartyRole || isUpdatingPartyRole}
+                            isDeleting={isDeletingPartyRole}
                             onAdd={addPartyRole} onUpdate={updatePartyRole} onDelete={deletePartyRole}
                              placeholder="e.g. Plaintiff / Petitioner"
                         />

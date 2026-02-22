@@ -43,6 +43,7 @@ const caseSchema = z.object({
   additionalParties: z.string().optional(),
   additionalOppositeParties: z.string().optional(),
   linkedCases: z.array(z.string()).optional(), 
+  vakkalath: z.string().optional(),
 });
 
 type CaseFormProps = {
@@ -81,6 +82,7 @@ export function CaseForm({ initialData, onSubmit, isLoading, isAddingHearing }: 
         additionalParties: "",
         additionalOppositeParties: "",
         linkedCases: [], 
+        vakkalath: "",
     };
 
     const form = useForm<z.infer<typeof caseSchema>>({
@@ -233,6 +235,13 @@ export function CaseForm({ initialData, onSubmit, isLoading, isAddingHearing }: 
                                 <FormItem>
                                     <FormLabel>Role of Party</FormLabel>
                                     <CreatableSelect options={partyRoleOptions} value={field.value} onChange={field.onChange} onCreate={handleCreatePartyRole} placeholder="Select role..." />
+                                    <FormMessage />
+                                </FormItem>
+                            )}/>
+                            <FormField control={form.control} name="vakkalath" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Vakkalath</FormLabel>
+                                    <FormControl><Input placeholder="Enter Vakkalath" className="h-10 rounded-xl" {...field} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}/>

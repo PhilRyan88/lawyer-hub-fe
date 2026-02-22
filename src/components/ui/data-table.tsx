@@ -57,16 +57,26 @@ export function DataTable<TData, TValue>({
           <TableHeader className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-300 dark:border-slate-800">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="hover:bg-transparent border-none">
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="h-14 px-6 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[11px]">
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
+                {headerGroup.headers.map((header) => {
+                  const size = header.column.columnDef.size;
+                  return (
+                    <TableHead 
+                      key={header.id} 
+                      className={cn(
+                        "h-14 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[11px]",
+                        size && size < 100 ? "px-2" : "px-6"
+                      )}
+                      style={{ width: size ? `${size}px` : undefined }}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             ))}
           </TableHeader>
@@ -90,11 +100,21 @@ export function DataTable<TData, TValue>({
                     onRowClick ? "cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/40" : ""
                   )}
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-6 py-4">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
+                  {row.getVisibleCells().map((cell) => {
+                    const size = cell.column.columnDef.size;
+                    return (
+                      <TableCell 
+                        key={cell.id} 
+                        className={cn(
+                        "py-4",
+                        size && size < 100 ? "px-2" : "px-6"
+                      )}
+                      style={{ width: size ? `${size}px` : undefined }}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))
             ) : (

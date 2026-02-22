@@ -27,10 +27,10 @@ export default function UserListing() {
   const users = data?.data || [];
   const totalPages = data?.totalPages || 1;
 
-  const [addUser] = useAddUserMutation();
-  const [updateUser] = useUpdateUserMutation();
+  const [addUser, { isLoading: isAdding }] = useAddUserMutation();
+  const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
   const [deleteUser] = useDeleteUserMutation();
-  const [toggleAccess] = useToggleUserAccessMutation();
+  const [toggleAccess, { isLoading: isToggling }] = useToggleUserAccessMutation();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -116,8 +116,12 @@ export default function UserListing() {
         id: "grant_revoke",
         header: "Access Toggle",
         cell: ({ row }) => (
-            <Button variant="ghost" size="sm" onClick={() => handleToggle(row.original._id)} className="h-8 rounded-lg">
-                {row.original.isActive ? <ShieldBan className="w-4 h-4 text-red-500 mr-2" /> : <ShieldCheck className="w-4 h-4 text-green-500 mr-2" />}
+            <Button variant="ghost" size="sm" onClick={() => handleToggle(row.original._id)} disabled={isToggling} className="h-8 rounded-lg">
+                {isToggling ? (
+                    <div className="h-4 w-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin mr-2" />
+                ) : (
+                    row.original.isActive ? <ShieldBan className="w-4 h-4 text-red-500 mr-2" /> : <ShieldCheck className="w-4 h-4 text-green-500 mr-2" />
+                )}
                 <span className="text-xs font-bold">{row.original.isActive ? "Revoke" : "Grant"}</span>
             </Button>
         )
@@ -176,7 +180,7 @@ export default function UserListing() {
                     <UserForm
                         initialData={editingUser}
                         onSubmit={editingUser ? handleUpdate : handleCreate}
-                        isLoading={false}
+                        isLoading={isAdding || isUpdating}
                     />
                 }
             />

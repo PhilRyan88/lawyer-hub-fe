@@ -54,7 +54,7 @@ export function Navbar() {
                 <Scale className="h-5 w-5 text-primary" />
             </div>
             <Link to="/dashboard" className="text-xl font-black tracking-tight hover:text-primary transition-colors">
-                Lawyer<span className="text-primary/70">Hub</span>
+                LawyerHub
             </Link>
         </div>
 

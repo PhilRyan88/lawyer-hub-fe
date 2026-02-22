@@ -118,6 +118,26 @@ export const caseDetailsApi = api.injectEndpoints({
         }),
         invalidatesTags: ["DocumentStages"],
       }),
+      // Fee Endpoints
+      getFee: builder.query({
+        query: (caseId) => `/fees/${caseId}`,
+        providesTags: (_result, _error, caseId) => [{ type: "Fees", id: caseId }],
+      }),
+      addOrUpdateFee: builder.mutation({
+        query: (body) => ({
+          url: "/fees",
+          method: "POST",
+          body,
+        }),
+        invalidatesTags: (_result, _error, { caseId }) => [{ type: "Fees", id: caseId }],
+      }),
+      deletePayment: builder.mutation({
+        query: ({ caseId, paymentId }) => ({
+          url: `/fees/${caseId}/${paymentId}`,
+          method: "DELETE",
+        }),
+        invalidatesTags: (_result, _error, { caseId }) => [{ type: "Fees", id: caseId }],
+      }),
     }),
 });
 
@@ -138,5 +158,8 @@ export const {
     useAddDocumentTypeMutation,
     useGetDocumentStagesQuery,
     useAddDocumentStageMutation,
-    useDeleteDocumentStageMutation
+    useDeleteDocumentStageMutation,
+    useGetFeeQuery,
+    useAddOrUpdateFeeMutation,
+    useDeletePaymentMutation
 } = caseDetailsApi;

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, Edit, ChevronUp, ChevronDown } from "lucide-react"; 
+import { Plus, Trash2, Edit, ChevronUp, ChevronDown, Star } from "lucide-react"; 
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -10,7 +10,7 @@ import { CustomModal } from "@/components/CustomModal";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { CaseForm } from "./CaseForm";
 import { DashboardFilters } from "./DashboardFilters";
-import { useGetCasesQuery, useAddCaseMutation, useUpdateCaseMutation, useGetCourtsQuery, useDeleteCaseMutation } from "./dashboardApi"; 
+import { useGetCasesQuery, useAddCaseMutation, useUpdateCaseMutation, useGetCourtsQuery, useDeleteCaseMutation, useToggleStarCaseMutation } from "./dashboardApi"; 
 import { toast } from "sonner"; 
 import { useNavigate } from "react-router-dom"; 
 import { useSelector, useDispatch } from "react-redux";
@@ -32,6 +32,7 @@ export type Case = {
     particulars?: string;
     stage?: string;
     nextDate?: string;
+    isStarred?: boolean;
 };
 
 export default function Dashboard() {
@@ -44,6 +45,7 @@ export default function Dashboard() {
     const [selectedCourts, setSelectedCourts] = useState<string[]>([]);
     const [startDate, setStartDate] = useState<Date | undefined>();
     const [endDate, setEndDate] = useState<Date | undefined>();
+    const [isStarred, setIsStarred] = useState(false);
 
     // Query Params
     const queryParams = {
@@ -55,6 +57,7 @@ export default function Dashboard() {
         limit,
         sortBy,
         sortOrder,
+        isStarred,
     };
 
     // API Hooks
@@ -63,9 +66,13 @@ export default function Dashboard() {
     const totalPages = data?.totalPages || 1;
 
     const { data: courts = [] } = useGetCourtsQuery({});
-    const [addCase] = useAddCaseMutation();
-    const [updateCase] = useUpdateCaseMutation();
-    const [deleteCase] = useDeleteCaseMutation(); 
+    const [addCase, { isLoading: isAdding }] = useAddCaseMutation();
+    const [updateCase, { isLoading: isUpdating }] = useUpdateCaseMutation();
+    const [deleteCase, { isLoading: isDeleting }] = useDeleteCaseMutation(); 
+    const [toggleStarCase] = useToggleStarCaseMutation();
+    
+    const role = localStorage.getItem("role");
+    const isAdminOrSuperAdmin = role === "ADMIN" || role === "SUPER_ADMIN";
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -145,6 +152,29 @@ export default function Dashboard() {
     };
 
     const columns: ColumnDef<Case>[] = [
+        {
+            id: "star",
+            header: "",
+            size: 20,
+            cell: ({ row }) => (
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        toggleStarCase(row.original._id);
+                    }}
+                    className="p-1 hover:bg-slate-100 rounded-lg transition-colors group"
+                >
+                    <Star 
+                        className={cn(
+                            "h-5 w-5 transition-all",
+                            row.original.isStarred 
+                                ? "fill-amber-400 text-amber-400 scale-110" 
+                                : "text-slate-300 group-hover:text-slate-400"
+                        )} 
+                    />
+                </button>
+            ),
+        },
         {
             accessorKey: "registrationDate",
             header: () => <SortHeader label="Registration" field="registrationDate" />,
@@ -251,17 +281,19 @@ export default function Dashboard() {
                     >
                         <Edit className="h-4 w-4" />
                     </Button>
-                    <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 rounded-lg text-slate-400 hover:text-destructive hover:bg-destructive/10 transition-colors" 
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(row.original._id);
-                        }}
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {isAdminOrSuperAdmin && (
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 rounded-lg text-slate-400 hover:text-destructive hover:bg-destructive/10 transition-colors" 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(row.original._id);
+                            }}
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    )}
                     <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-1" />
                     <Button 
                         variant="ghost" 
@@ -290,6 +322,8 @@ export default function Dashboard() {
                         setStartDate={setStartDate}
                         endDate={endDate} 
                         setEndDate={setEndDate}
+                        isStarred={isStarred}
+                        setIsStarred={setIsStarred}
                         onSearch={() => { dispatch(setPage(1)); }}
                     />
                 </div>
@@ -333,7 +367,7 @@ export default function Dashboard() {
                     <CaseForm
                         initialData={editingCase}
                         onSubmit={handleSaveCase}
-                        isLoading={false}
+                        isLoading={isAdding || isUpdating}
                         isUpdate={!!editingCase}
                     />
                 }
@@ -346,6 +380,7 @@ export default function Dashboard() {
                     setCaseToDelete(null);
                 }}
                 onConfirm={confirmDelete}
+                isLoading={isDeleting}
                 title="Delete Case Entry"
                 description="Are you sure you want to delete this case? This action cannot be undone."
                 confirmLabel="Delete"

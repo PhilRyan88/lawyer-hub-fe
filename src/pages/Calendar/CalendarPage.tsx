@@ -7,6 +7,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { useNavigate } from "react-router-dom";
 import { useGetCalendarEventsQuery } from "./calendarApi";
 import { cn } from "@/lib/utils";
+import { generateDailySchedulePDF } from "@/utils/pdfGenerator";
+import { Printer } from "lucide-react";
+import { toast } from "sonner";
 
 export default function CalendarPage() {
     const navigate = useNavigate();
@@ -74,9 +77,25 @@ export default function CalendarPage() {
 
         return (
             <div className="flex flex-col h-full">
-                <div className="mb-6">
-                    <h2 className="text-xl font-bold">{format(selectedDay, "EEEE, MMMM do, yyyy")}</h2>
-                    <p className="text-muted-foreground">{dayEvents.length} Cases total</p>
+                <div className="mb-6 flex items-start justify-between gap-4">
+                    <div>
+                        <h2 className="text-xl font-bold">{format(selectedDay, "EEEE, MMMM do, yyyy")}</h2>
+                        <p className="text-muted-foreground">{dayEvents.length} Cases total</p>
+                    </div>
+                    {dayEvents.length > 0 && (
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="shrink-0 rounded-xl gap-2 border-primary/20 hover:bg-primary/5 text-primary font-bold"
+                            onClick={() => {
+                                toast.info("Generating Daily Schedule PDF...");
+                                generateDailySchedulePDF(selectedDay, groupedEvents);
+                            }}
+                        >
+                            <Printer className="h-4 w-4" />
+                            Capture
+                        </Button>
+                    )}
                 </div>
 
                 {courts.length === 0 ? (
