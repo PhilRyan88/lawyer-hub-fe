@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, Scale, LayoutDashboard, Calendar, History, Users, Settings, LogOut, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/mode-toggle";
@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -37,7 +38,7 @@ export function Navbar() {
 
   const handleLogout = () => {
     localStorage.clear();
-    window.location.href = "/login";
+    navigate("/login", { replace: true });
   };
 
   return (
