@@ -4,7 +4,7 @@ export const api = createApi({
   reducerPath: 'api',
   tagTypes: ["Users", "Cases", "Courts", "Stages", "Contacts", "CaseTypes", "PartyRoles", "Documents", "DocumentTypes", "DocumentStages", "Fees"],
   baseQuery: fetchBaseQuery({
-    baseUrl: '/api',
+    baseUrl: import.meta.env.VITE_API_URL || '/api',
     prepareHeaders: (headers) => {
       const token = localStorage.getItem("token");
       if (token) {
