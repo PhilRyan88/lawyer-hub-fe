@@ -52,7 +52,7 @@ export default function MissedDate() {
   return (
     <div className="p-2 space-y-2">
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="p-2">
             <DataTable 
                 columns={columns} 
                 data={missedCases} 

@@ -8,6 +8,8 @@ const initialState = {
     courtName: "",
     startDate: null,
     endDate: null,
+    sortBy: "updatedAt",
+    sortOrder: "desc",
   },
 };
 
@@ -22,6 +24,11 @@ const dashboardSlice = createSlice({
       state.limit = action.payload;
       state.page = 1; // Reset to page 1 when limit changes
     },
+    setSort: (state, action) => {
+        state.filters.sortBy = action.payload.sortBy;
+        state.filters.sortOrder = action.payload.sortOrder;
+        state.page = 1;
+    },
     setFilters: (state, action) => {
       state.filters = { ...state.filters, ...action.payload };
       state.page = 1; // Reset to page 1 when filters change
@@ -33,5 +40,5 @@ const dashboardSlice = createSlice({
   },
 });
 
-export const { setPage, setLimit, setFilters, resetFilters } = dashboardSlice.actions;
+export const { setPage, setLimit, setSort, setFilters, resetFilters } = dashboardSlice.actions;
 export default dashboardSlice.reducer;

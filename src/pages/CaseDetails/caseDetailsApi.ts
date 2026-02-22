@@ -42,12 +42,81 @@ export const caseDetailsApi = api.injectEndpoints({
         }),
         invalidatesTags: (_result, _error, { caseId }) => [{ type: "Contacts", id: caseId }],
       }),
+      updateContact: builder.mutation({
+        query: ({ id, ...body }) => ({
+            url: `/contacts/${id}`,
+            method: "PUT",
+            body,
+        }),
+        invalidatesTags: ["Contacts"],
+      }),
       deleteContact: builder.mutation({
         query: (id) => ({
             url: `/contacts/${id}`,
             method: "DELETE",
         }),
-        invalidatesTags: ["Contacts"],
+        invalidatesTags: ["Contacts", "Documents"],
+      }),
+      // Document Endpoints
+      getDocuments: builder.query({
+        query: (caseId) => `/documents/case/${caseId}`,
+        providesTags: (_result, _error, caseId) => [{ type: "Documents", id: caseId }],
+      }),
+      addDocument: builder.mutation({
+        query: (body) => ({
+          url: "/documents",
+          method: "POST",
+          body,
+        }),
+        invalidatesTags: (_result, _error, { caseId }) => [{ type: "Documents", id: caseId }],
+      }),
+      updateDocument: builder.mutation({
+        query: ({ id, ...body }) => ({
+          url: `/documents/${id}`,
+          method: "PUT",
+          body,
+        }),
+        invalidatesTags: ["Documents"],
+      }),
+      deleteDocument: builder.mutation({
+        query: (id) => ({
+            url: `/documents/${id}`,
+            method: "DELETE",
+        }),
+        invalidatesTags: ["Documents"],
+      }),
+      // Document Types
+      getDocumentTypes: builder.query({
+        query: () => `/document-types`,
+        providesTags: ["DocumentTypes"],
+      }),
+      addDocumentType: builder.mutation({
+        query: (body) => ({
+          url: "/document-types",
+          method: "POST",
+          body,
+        }),
+        invalidatesTags: ["DocumentTypes"],
+      }),
+      // Document Stages
+      getDocumentStages: builder.query({
+        query: () => `/document-stages`,
+        providesTags: ["DocumentStages"],
+      }),
+      addDocumentStage: builder.mutation({
+        query: (body) => ({
+          url: "/document-stages",
+          method: "POST",
+          body,
+        }),
+        invalidatesTags: ["DocumentStages"],
+      }),
+      deleteDocumentStage: builder.mutation({
+        query: (id) => ({
+          url: `/document-stages/${id}`,
+          method: "DELETE",
+        }),
+        invalidatesTags: ["DocumentStages"],
       }),
     }),
 });
@@ -59,5 +128,15 @@ export const {
     useDeleteHearingMutation,
     useGetContactsQuery,
     useAddContactMutation,
-    useDeleteContactMutation
+    useUpdateContactMutation,
+    useDeleteContactMutation,
+    useGetDocumentsQuery,
+    useAddDocumentMutation,
+    useUpdateDocumentMutation,
+    useDeleteDocumentMutation,
+    useGetDocumentTypesQuery,
+    useAddDocumentTypeMutation,
+    useGetDocumentStagesQuery,
+    useAddDocumentStageMutation,
+    useDeleteDocumentStageMutation
 } = caseDetailsApi;

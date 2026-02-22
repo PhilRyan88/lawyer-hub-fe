@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Plus, Trash2, Edit } from "lucide-react"; 
+import { Plus, Trash2, Edit, ChevronUp, ChevronDown } from "lucide-react"; 
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,15 @@ import { CaseForm } from "./CaseForm";
 import { DashboardFilters } from "./DashboardFilters";
 import { useGetCasesQuery, useAddCaseMutation, useUpdateCaseMutation, useGetCourtsQuery, useDeleteCaseMutation } from "./dashboardApi"; 
 import { toast } from "sonner"; 
+import { useNavigate } from "react-router-dom"; 
+import { useSelector, useDispatch } from "react-redux";
+import { setPage, setLimit, setSort } from "@/store/slices/dashboardSlice";
+import { CustomTooltip } from "@/components/CustomTooltip";
+import { Badge } from "@/components/ui/badge";
+import { 
+    Calendar, User, Scale, Gavel, 
+    Hash, Info, ChevronRight 
+} from "lucide-react";
 
 // Define Case Type
 export type Case = {
@@ -25,15 +35,11 @@ export type Case = {
     nextDate?: string;
 };
 
-import { useNavigate } from "react-router-dom"; 
-
-import { useSelector, useDispatch } from "react-redux";
-import { setPage, setLimit } from "@/store/slices/dashboardSlice";
-
 export default function Dashboard() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const { page, limit } = useSelector((state: any) => state.dashboard);
+    const { page, limit, filters } = useSelector((state: any) => state.dashboard);
+    const { sortBy, sortOrder } = filters;
 
     const [search, setSearch] = useState("");
     const [selectedCourts, setSelectedCourts] = useState<string[]>([]);
@@ -48,6 +54,8 @@ export default function Dashboard() {
         endDate: endDate ? endDate.toISOString() : undefined,
         page,
         limit,
+        sortBy,
+        sortOrder,
     };
 
     // API Hooks
@@ -105,51 +113,136 @@ export default function Dashboard() {
          }
     }
 
+    const handleToggleSort = (field: string) => {
+        let newOrder: 'asc' | 'desc' = 'asc';
+        if (sortBy === field) {
+            newOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+        }
+        dispatch(setSort({ sortBy: field, sortOrder: newOrder }));
+    };
+
+    const SortHeader = ({ label, field }: { label: string; field: string }) => {
+        const isActive = sortBy === field;
+        return (
+            <div 
+                className="flex items-center gap-1 cursor-pointer hover:text-primary transition-colors group"
+                onClick={() => handleToggleSort(field)}
+            >
+                {label}
+                <div className="flex flex-col -space-y-1">
+                    <ChevronUp className={cn(
+                        "h-3 w-3", 
+                        isActive && sortOrder === 'asc' ? "text-primary" : "text-slate-300 group-hover:text-slate-400"
+                    )} />
+                    <ChevronDown className={cn(
+                        "h-3 w-3", 
+                        isActive && sortOrder === 'desc' ? "text-primary" : "text-slate-300 group-hover:text-slate-400"
+                    )} />
+                </div>
+            </div>
+        );
+    };
+
     const columns: ColumnDef<Case>[] = [
         {
             accessorKey: "registrationDate",
-            header: "Reg. Date",
-            cell: ({ row }) => row.original.registrationDate ? format(new Date(row.original.registrationDate), "dd/MM/yyyy") : "-",
-        },
-        {
-            accessorKey: "previousDate",
-            header: "Prev. Date",
-            cell: ({ row }) => row.original.previousDate ? format(new Date(row.original.previousDate), "dd/MM/yyyy") : "-",
-        },
-        {
-            accessorKey: "courtName",
-            header: "Court Name",
+            header: () => <SortHeader label="Registration" field="registrationDate" />,
+            cell: ({ row }) => {
+                const date = row.original.registrationDate;
+                if (!date) return <span className="text-slate-300">-</span>;
+                return (
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-200">
+                            <Calendar className="h-3.5 w-3.5 text-primary/60" />
+                            {format(new Date(date), "dd MMM, yyyy")}
+                        </div>
+                        <span className="text-[10px] text-slate-400 font-medium uppercase tracking-tight ml-5">Reg. Date</span>
+                    </div>
+                );
+            }
         },
         {
             accessorKey: "caseNo",
-            header: "Case No",
+            header: "Case Detail",
+            cell: ({ row }) => (
+                <div className="flex flex-col">
+                    <div className="flex items-center gap-1.5 font-black text-primary">
+                        <Hash className="h-3.5 w-3.5 opacity-60" />
+                        {row.original.caseNo}
+                    </div>
+                    <div className="flex items-center gap-1 text-[11px] text-slate-500 font-bold ml-5">
+                        <Scale className="h-3 w-3 opacity-50" />
+                        {row.original.courtName}
+                    </div>
+                </div>
+            )
         },
         {
             accessorKey: "nameOfParty",
-            header: "Party Name",
-        },
-        {
-            accessorKey: "particulars",
-            header: "Particulars",
+            header: "Client & Particulars",
+            cell: ({ row }) => (
+                <div className="flex flex-col">
+                    <div className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-200">
+                        <User className="h-3.5 w-3.5 text-slate-400" />
+                        {row.original.nameOfParty}
+                    </div>
+                    {row.original.particulars && (
+                        <div className="text-[11px] text-slate-400 font-medium truncate max-w-[150px] ml-5">
+                            {row.original.particulars}
+                        </div>
+                    )}
+                </div>
+            )
         },
         {
             accessorKey: "stage",
-            header: "Stage",
+            header: "Current Stage",
+            cell: ({ row }) => (
+                <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold border-none rounded-lg px-2 py-0.5">
+                    {row.original.stage}
+                </Badge>
+            )
+        },
+        {
+            accessorKey: "previousDate",
+            header: () => <SortHeader label="Last Hearing" field="previousDate" />,
+            cell: ({ row }) => {
+                const date = row.original.previousDate;
+                if (!date) return <span className="text-slate-300 opacity-50">Not set</span>;
+                return (
+                    <div className="flex items-center gap-1.5 font-bold text-slate-500 dark:text-slate-400">
+                        <Info className="h-3.5 w-3.5 opacity-40" />
+                        {format(new Date(date), "dd/MM/yy")}
+                    </div>
+                );
+            }
         },
         {
             accessorKey: "nextDate",
-            header: "Next Date",
-            cell: ({ row }) => row.original.nextDate ? format(new Date(row.original.nextDate), "dd/MM/yyyy") : "-",
+            header: () => <SortHeader label="Next Hearing" field="nextDate" />,
+            cell: ({ row }) => {
+                const date = row.original.nextDate;
+                if (!date) return <Badge variant="outline" className="text-slate-300 border-dashed">TBA</Badge>;
+                return (
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-1.5 font-black text-rose-500 dark:text-rose-400">
+                            <Gavel className="h-3.5 w-3.5" />
+                            {format(new Date(date), "dd MMM, yyyy")}
+                        </div>
+                        <span className="text-[10px] text-rose-300 dark:text-rose-900/50 font-black uppercase tracking-widest ml-5 italic">Upcoming</span>
+                    </div>
+                );
+            }
         },
         {
             id: "actions",
-            header: "Actions",
+            header: () => <div className="text-right">Action</div>,
             cell: ({ row }) => (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center justify-end gap-1">
                     <Button 
                         variant="ghost" 
                         size="icon"
-                        className="text-primary hover:text-primary hover:bg-primary/10"
+                        className="h-8 w-8 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
                         onClick={(e) => {
                             e.stopPropagation();
                             handleEdit(row.original);
@@ -160,7 +253,7 @@ export default function Dashboard() {
                     <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="text-destructive hover:text-red-700 hover:bg-red-100" 
+                        className="h-8 w-8 rounded-lg text-slate-400 hover:text-destructive hover:bg-destructive/10 transition-colors" 
                         onClick={(e) => {
                             e.stopPropagation();
                             handleDelete(row.original._id);
@@ -168,44 +261,77 @@ export default function Dashboard() {
                     >
                         <Trash2 className="h-4 w-4" />
                     </Button>
+                    <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-1" />
+                    <Button 
+                        variant="ghost" 
+                        size="icon"
+                        className="h-8 w-8 rounded-lg text-slate-300 group-hover:text-primary transition-colors"
+                    >
+                        <ChevronRight className="h-4 w-4" />
+                    </Button>
                 </div>
             )
         },
     ];
 
     return (
-        <div className="space-y-2 p-2">
-                <DashboardFilters 
-                    search={search} setSearch={setSearch}
-                    courts={courts} selectedCourts={selectedCourts} setSelectedCourts={setSelectedCourts}
-                    startDate={startDate} setStartDate={setStartDate}
-                    endDate={endDate} setEndDate={setEndDate}
-                    onSearch={() => { dispatch(setPage(1)); }}
-                >
-                    <Button 
-                        onClick={() => {
-                            setEditingCase(null);
-                            setIsModalOpen(true);
-                        }} 
-                        size="icon" 
-                        className="h-9 w-9"
-                    >
-                        <Plus className="h-5 w-5" />
-                    </Button>
-                </DashboardFilters>
-
-                <div className="bg-background rounded-md border p-1">
-                     {isLoading ? <div className="p-4 text-center">Loading cases...</div> : (
-                        <DataTable 
-                            columns={columns} 
-                            data={cases} 
-                            onRowClick={(row) => navigate(`/cases/${row._id}`)}    
-                            pageCount={totalPages}
-                            pageIndex={page}
-                            pageSize={limit}
-                            onPageChange={(p) => dispatch(setPage(p))}
-                            onLimitChange={(l) => dispatch(setLimit(l))}
+        <div className="min-h-screen bg-slate-50/50 dark:bg-[#020617] p-4 md:p-8">
+            <div className="max-w-[1600px] mx-auto space-y-6">
+                
+                {/* Header & Controls Section */}
+                <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
+                    <div className="w-full lg:max-w-3xl">
+                        <DashboardFilters 
+                            search={search} 
+                            setSearch={setSearch}
+                            courts={courts} 
+                            selectedCourts={selectedCourts} 
+                            setSelectedCourts={setSelectedCourts}
+                            startDate={startDate} 
+                            setStartDate={setStartDate}
+                            endDate={endDate} 
+                            setEndDate={setEndDate}
+                            onSearch={() => { dispatch(setPage(1)); }}
                         />
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0 self-end lg:self-auto">
+                         <div className="h-10 w-px bg-slate-200 dark:bg-slate-800 hidden lg:block mx-2" />
+                         <CustomTooltip content="Add New Case" side="left">
+                            <Button 
+                                onClick={() => {
+                                    setEditingCase(null);
+                                    setIsModalOpen(true);
+                                }} 
+                                size="icon" 
+                                className="h-12 w-12 rounded-2xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                            >
+                                <Plus className="h-6 w-6" />
+                            </Button>
+                         </CustomTooltip>
+                    </div>
+                </div>
+
+                {/* Table Section */}
+                <div className="bg-background rounded-[32px] border border-slate-200/60 dark:border-slate-800/60 shadow-xl shadow-slate-200/20 dark:shadow-none overflow-hidden transition-all duration-500">
+                     {isLoading ? (
+                        <div className="p-20 flex flex-col items-center justify-center gap-4">
+                            <div className="h-12 w-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                            <p className="text-slate-500 font-bold animate-pulse">Fetching your cases...</p>
+                        </div>
+                     ) : (
+                        <div className="p-2">
+                             <DataTable 
+                                columns={columns} 
+                                data={cases} 
+                                onRowClick={(row) => navigate(`/cases/${row._id}`)}    
+                                pageCount={totalPages}
+                                pageIndex={page}
+                                pageSize={limit}
+                                onPageChange={(p) => dispatch(setPage(p))}
+                                onLimitChange={(l) => dispatch(setLimit(l))}
+                            />
+                        </div>
                      )}
                 </div>
 
@@ -240,5 +366,6 @@ export default function Dashboard() {
                     variant="destructive"
                 />
             </div>
+        </div>
     );
 }

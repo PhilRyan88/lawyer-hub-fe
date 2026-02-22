@@ -9,7 +9,15 @@ import {
     useDeleteHearingMutation,
     useGetContactsQuery,
     useAddContactMutation,
-    useDeleteContactMutation
+    useUpdateContactMutation,
+    useDeleteContactMutation,
+    useGetDocumentsQuery,
+    useAddDocumentMutation,
+    useUpdateDocumentMutation,
+    useDeleteDocumentMutation,
+    useGetDocumentStagesQuery,
+    useAddDocumentStageMutation,
+    useDeleteDocumentStageMutation
 } from "./caseDetailsApi";
 
 import { Button } from "@/components/ui/button";
@@ -18,8 +26,9 @@ import { Badge } from "@/components/ui/badge";
 import { CustomModal } from "@/components/CustomModal";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { CaseForm } from "../Dashboard/CaseForm";
-import { ContactForm } from "./ContactForm"; // Import new form
-import { ReminderModal } from "@/components/ReminderModal"; // Import
+import { ContactForm } from "./ContactForm"; 
+import { ReminderModal } from "@/components/ReminderModal"; 
+import { DocumentTimeline } from "./DocumentTimeline"; // Import Timeline
 import { toast } from "sonner";
 
 
@@ -29,20 +38,30 @@ export default function CaseDetails() {
     const navigate = useNavigate();
     const { data: caseData, isLoading, isError } = useGetCaseQuery(id);
     
-    // Hearing Mutations
+
     const [addHearing] = useAddHearingMutation();
     const [updateHearing] = useUpdateHearingMutation();
     const [deleteHearing] = useDeleteHearingMutation();
 
-    // Contact Queries & Mutations
+
     const { data: contacts = [], isLoading: isContactsLoading } = useGetContactsQuery(id, {
-        skip: !id, // Skip if no ID
+        skip: !id, 
     });
     const [addContact] = useAddContactMutation();
+    const [updateContact] = useUpdateContactMutation();
     const [deleteContact] = useDeleteContactMutation();
+
+    const { data: documents = [], isLoading: isDocumentsLoading } = useGetDocumentsQuery(id, { skip: !id });
+    const { data: stages = [], isLoading: isStagesLoading } = useGetDocumentStagesQuery({});
+    const [addDocument] = useAddDocumentMutation();
+    const [updateDocument] = useUpdateDocumentMutation();
+    const [addStage] = useAddDocumentStageMutation();
+    const [deleteStage] = useDeleteDocumentStageMutation();
+    const [deleteDocument] = useDeleteDocumentMutation();
 
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isContactModalOpen, setIsContactModalOpen] = useState(false); 
+    const [editingContact, setEditingContact] = useState<any>(null); // State for editing
     const [isReminderModalOpen, setIsReminderModalOpen] = useState(false); // New State
     const [editingHearing, setEditingHearing] = useState<any>(null); 
     
@@ -142,17 +161,86 @@ export default function CaseDetails() {
         setDeleteConfirmation({ isOpen: true, type: 'hearing', id: hearingId });
     }
 
-    // --- Contact Handlers ---
-    const handleAddContact = async (data: any) => {
+    const handleSaveContact = async (data: any) => {
         try {
-            await addContact({ caseId: id, ...data }).unwrap();
-            toast.success("Contact added successfully");
+            const { documents: docData, removedDocIds, _id: _contactId, ...contactData } = data;
+            
+            let contactId = editingContact?._id;
+
+            if (editingContact) {
+                await updateContact({ id: contactId, ...contactData }).unwrap();
+                toast.success("Contact updated");
+            } else {
+                const newContact = await addContact({ caseId: id, ...contactData }).unwrap();
+                contactId = newContact._id;
+                toast.success("Contact added");
+            }
+            
+            if (docData && docData.length > 0) {
+                for (const doc of docData) {
+                   if (doc._id) {
+                       // Update Existing
+                       const { _id, ...updates } = doc;
+                       await updateDocument({ id: _id, ...updates }).unwrap();
+                   } else {
+                       // Create New
+                       await addDocument({
+                           caseId: id,
+                           contactId: contactId,
+                           ...doc
+                       }).unwrap();
+                   }
+                }
+            }
+
+            // Handle Deleted Documents
+            if (removedDocIds && removedDocIds.length > 0) {
+                 for (const docId of removedDocIds) {
+                     await deleteDocument(docId).unwrap();
+                 }
+            }
+
             setIsContactModalOpen(false);
+            setEditingContact(null);
         } catch (error: any) {
-            console.error("Add contact error:", error);
-            toast.error("Failed to add contact");
+            console.error("Save contact/document error:", error);
+            toast.error("Failed to save contact operations");
         }
     }
+
+    const startEditContact = (contact: any) => {
+        setEditingContact(contact);
+        setIsContactModalOpen(true);
+    };
+
+    const handleMoveDocument = async (docId: string, stageId: string) => {
+        try {
+            await updateDocument({ id: docId, stage: stageId }).unwrap();
+            toast.success("Document moved");
+        } catch (error) {
+            console.error("Move document error", error);
+            toast.error("Failed to move document");
+        }
+    };
+
+    const handleAddStage = async (name: string) => {
+        try {
+            await addStage({ name, order: stages.length }).unwrap();
+            toast.success("Stage added");
+        } catch (error) {
+            toast.error("Failed to add stage");
+        }
+    };
+
+    const handleDeleteStage = async (stageId: string) => {
+         // Add confirmation logic ideally
+         try {
+             await deleteStage(stageId).unwrap();
+             toast.success("Stage deleted");
+         } catch (error) {
+             toast.error("Failed to delete stage");
+         }
+    };
 
     const handleDeleteContact = (contactId: string) => {
         setDeleteConfirmation({ isOpen: true, type: 'contact', id: contactId });
@@ -220,6 +308,12 @@ export default function CaseDetails() {
                             className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
                         >
                             Linked Cases
+                        </TabsTrigger>
+                        <TabsTrigger 
+                            value="documents" 
+                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                        >
+                            Documents & Timeline
                         </TabsTrigger>
                         {isAdminOrSuperAdmin && (
                             <TabsTrigger 
@@ -417,7 +511,14 @@ export default function CaseDetails() {
                 <TabsContent value="contacts">
                     <div className="space-y-4">
                         <div className="flex justify-end">
-                            <Button size="sm" onClick={() => setIsContactModalOpen(true)} className="bg-sky-500 hover:bg-sky-600">
+                            <Button 
+                                size="sm" 
+                                onClick={() => {
+                                    setEditingContact(null);
+                                    setIsContactModalOpen(true);
+                                }} 
+                                className="bg-sky-500 hover:bg-sky-600"
+                            >
                                 <Plus className="h-4 w-4 mr-2" /> Add Contact
                             </Button>
                         </div>
@@ -457,6 +558,9 @@ export default function CaseDetails() {
                                     <Button variant="ghost" size="icon" className="hover:text-red-500 text-slate-400" onClick={() => handleDeleteContact(contact._id)}>
                                         <Trash className="h-4 w-4" />
                                     </Button>
+                                    <Button variant="ghost" size="icon" className="hover:text-sky-500 text-slate-400" onClick={() => startEditContact(contact)}>
+                                        <Edit2 className="h-4 w-4" />
+                                    </Button>
                                 </div>
                             ))}
                         </div>
@@ -487,6 +591,17 @@ export default function CaseDetails() {
                         </div>
                     </div>
                 </TabsContent>
+                
+                <TabsContent value="documents">
+                    <DocumentTimeline
+                        documents={documents}
+                        stages={stages}
+                        onMoveDocument={handleMoveDocument}
+                        onAddStage={handleAddStage}
+                        onDeleteStage={handleDeleteStage}
+                        isLoading={isDocumentsLoading || isStagesLoading}
+                    />
+                </TabsContent>
 
                 {isAdminOrSuperAdmin && (
                      <TabsContent value="fees">
@@ -511,14 +626,19 @@ export default function CaseDetails() {
                 }
             />
 
-            {/* Add Contact Modal */}
-             <CustomModal
+               {/* Add/Edit Contact Modal */}
+               <CustomModal
                 isOpen={isContactModalOpen}
-                onClose={() => setIsContactModalOpen(false)}
-                title="Add Client Contact"
+                onClose={() => {
+                    setIsContactModalOpen(false);
+                    setEditingContact(null);
+                }}
+                title={editingContact ? "Edit Client Contact" : "Add Client Contact"}
                 body={
                      <ContactForm
-                        onSubmit={handleAddContact}
+                        initialData={editingContact}
+                        documents={editingContact ? documents.filter((d: any) => d.contactId === editingContact._id) : []}
+                        onSubmit={handleSaveContact}
                         isLoading={false}
                     />
                 }

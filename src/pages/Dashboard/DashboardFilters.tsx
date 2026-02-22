@@ -1,13 +1,14 @@
+import * as React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CustomDatePicker } from "@/components/CustomDatePicker";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, X, Filter } from "lucide-react";
+import { Check, ChevronsUpDown, X, Filter, Search, RotateCcw } from "lucide-react";
 import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-// Simple MultiSelect for Courts
+// MultiSelect for Courts with refined styling
 function MultiSelect({ options, selected, onChange, placeholder }: any) {
     const [open, setOpen] = React.useState(false);
 
@@ -18,37 +19,42 @@ function MultiSelect({ options, selected, onChange, placeholder }: any) {
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-                <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between h-auto min-h-10">
-                    <div className="flex flex-wrap gap-1">
-                        {selected.length === 0 && placeholder}
-                        {selected.map((item: string) => (
-                            <Badge variant="secondary" key={item} className="mr-1 mb-1">
+                <Button 
+                    variant="outline" 
+                    role="combobox" 
+                    aria-expanded={open} 
+                    className="w-full justify-between h-10 rounded-xl border-slate-200 dark:border-slate-800 bg-background/50 hover:bg-background transition-colors"
+                >
+                    <div className="flex flex-wrap gap-1 items-center overflow-hidden">
+                        {selected.length === 0 && <span className="text-muted-foreground">{placeholder}</span>}
+                        {selected.slice(0, 2).map((item: string) => (
+                            <Badge variant="secondary" key={item} className="rounded-lg h-6 px-1.5 font-bold bg-primary/10 text-primary border-none">
                                 {item}
                                 <button
-                                    className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            handleUnselect(item);
-                                        }
-                                    }}
-                                    onMouseDown={(e) => {
+                                    className="ml-1 hover:text-destructive transition-colors outline-none"
+                                    onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
+                                        handleUnselect(item);
                                     }}
-                                    onClick={() => handleUnselect(item)}
                                 >
-                                    <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                                    <X className="h-3 w-3" />
                                 </button>
                             </Badge>
                         ))}
+                        {selected.length > 2 && (
+                            <Badge variant="secondary" className="rounded-lg h-6 font-bold bg-slate-100 dark:bg-slate-800">
+                                +{selected.length - 2}
+                            </Badge>
+                        )}
                     </div>
-                    <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-full p-0">
-                <Command>
+            <PopoverContent className="w-64 p-0 rounded-2xl overflow-hidden border-slate-200 dark:border-slate-800 shadow-2xl" align="start">
+                <Command className="bg-background">
                     <CommandList>
-                        <CommandGroup className="max-h-64 overflow-auto">
+                        <CommandGroup className="max-h-64">
                             {options.map((option: any) => (
                                 <CommandItem
                                     key={option.value}
@@ -58,16 +64,16 @@ function MultiSelect({ options, selected, onChange, placeholder }: any) {
                                                 ? selected.filter((item: string) => item !== option.value)
                                                 : [...selected, option.value]
                                         );
-                                        setOpen(true);
                                     }}
+                                    className="flex items-center gap-2 py-3 px-4"
                                 >
-                                    <Check
-                                        className={cn(
-                                            "mr-2 h-4 w-4",
-                                            selected.includes(option.value) ? "opacity-100" : "opacity-0"
-                                        )}
-                                    />
-                                    {option.label}
+                                    <div className={cn(
+                                        "h-4 w-4 rounded border flex items-center justify-center transition-colors",
+                                        selected.includes(option.value) ? "bg-primary border-primary" : "border-slate-300"
+                                    )}>
+                                        {selected.includes(option.value) && <Check className="h-3 w-3 text-white" />}
+                                    </div>
+                                    <span className="font-medium">{option.label}</span>
                                 </CommandItem>
                             ))}
                         </CommandGroup>
@@ -78,75 +84,118 @@ function MultiSelect({ options, selected, onChange, placeholder }: any) {
     );
 }
 
-import * as React from "react";
-
 export function DashboardFilters({ 
     search, setSearch, 
     courts, selectedCourts, setSelectedCourts,
     startDate, setStartDate,
     endDate, setEndDate,
-    children
+    onSearch
 }: any) {
-    const [showFilters, setShowFilters] = React.useState(false);
-
+    const [isCollapsed, setIsCollapsed] = React.useState(true);
     const courtOptions = courts.map((c: any) => ({ label: c.name, value: c.name }));
 
-    return (
-        <div className="bg-card p-2 rounded-lg border mb-2">
-            
-            {/* Mobile Header: Filter Toggle + Add Button */}
-            <div className="md:hidden flex justify-between items-center mb-2">
-                <span className="text-sm font-semibold">Filters & Actions</span>
-                <div className="flex gap-2">
-                    <Button 
-                        variant={showFilters ? "secondary" : "outline"} 
-                        size="icon" 
-                        onClick={() => setShowFilters(!showFilters)}
-                    >
-                        {showFilters ? <X className="h-4 w-4" /> : <Filter className="h-4 w-4" />}
-                    </Button>
-                     {children}
-                </div>
-            </div>
+    const hasActiveFilters = selectedCourts.length > 0 || startDate || endDate;
 
-            <div className={cn("flex flex-col md:flex-row gap-2 items-end", !showFilters && "hidden md:flex")}>
-                <div className="flex-1 w-full md:w-auto">
-                    <label className="text-xs font-medium mb-1 block">Search Case/Party</label>
+    const clearFilters = () => {
+        setSelectedCourts([]);
+        setStartDate(undefined);
+        setEndDate(undefined);
+    };
+
+    return (
+        <div className="w-full space-y-3">
+            {/* Primary Filter Row */}
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+                <div className="relative w-full sm:max-w-md group">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <Search className="h-4 w-4 text-slate-500 group-focus-within:text-primary transition-colors" />
+                    </div>
                     <Input 
-                        placeholder="Search..." 
+                        placeholder="Search cases, parties, or numbers..." 
                         value={search} 
                         onChange={(e) => setSearch(e.target.value)} 
-                        className="h-9"
+                        className="h-11 pl-10 rounded-2xl border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-950 focus-visible:ring-primary shadow-md group-hover:border-primary/50 transition-all font-medium"
                     />
                 </div>
                 
-                <div className="flex-1 w-full md:w-auto">
-                    <label className="text-xs font-medium mb-1 block">Courts</label>
-                    <MultiSelect 
-                        options={courtOptions} 
-                        selected={selectedCourts} 
-                        onChange={setSelectedCourts}
-                        placeholder="Select Courts"
-                    />
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Button 
+                        variant={isCollapsed ? "outline" : "secondary"}
+                        className={cn(
+                            "grow sm:grow-0 h-11 rounded-2xl px-5 flex items-center gap-2 font-bold transition-all shadow-sm border-slate-300 dark:border-slate-800",
+                            !isCollapsed && "bg-primary text-primary-foreground border-transparent hover:bg-primary/90 shadow-primary/20 shadow-lg",
+                            hasActiveFilters && isCollapsed && "border-primary text-primary"
+                        )}
+                        onClick={() => setIsCollapsed(!isCollapsed)}
+                    >
+                        <Filter className={cn("h-4 w-4 transition-transform", !isCollapsed && "rotate-180")} />
+                        <span>Filters</span>
+                        {hasActiveFilters && (
+                            <span className={cn(
+                                "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-black",
+                                isCollapsed ? "bg-primary text-primary-foreground" : "bg-white text-primary"
+                            )}>
+                                { (selectedCourts.length > 0 ? 1 : 0) + (startDate ? 1 : 0) + (endDate ? 1 : 0) }
+                            </span>
+                        )}
+                    </Button>
                 </div>
-
-                <div className="w-full md:w-auto">
-                    <label className="text-xs font-medium mb-1 block">From Date</label>
-                    <CustomDatePicker date={startDate} onChange={setStartDate} placeholder="Start Date" className="w-full md:w-[130px] h-9" />
-                </div>
-
-                <div className="w-full md:w-auto">
-                    <label className="text-xs font-medium mb-1 block">To Date</label>
-                    <CustomDatePicker date={endDate} onChange={setEndDate} placeholder="End Date" className="w-full md:w-[130px] h-9" />
-                </div>
-
-                {/* Desktop Action Button Slot (Hidden on mobile to avoid duplication) */}
-                {children && (
-                     <div className="hidden md:block w-full md:w-auto">
-                        {children}
-                     </div>
-                )}
             </div>
+
+            {/* Collapsible Advanced Filters */}
+            {!isCollapsed && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-5 rounded-[24px] bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800/50 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Courts</label>
+                        <MultiSelect 
+                            options={courtOptions} 
+                            selected={selectedCourts} 
+                            onChange={setSelectedCourts}
+                            placeholder="All Courts"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Date Range</label>
+                        <div className="flex items-center gap-2">
+                            <CustomDatePicker 
+                                date={startDate} 
+                                onChange={setStartDate} 
+                                placeholder="Start" 
+                                className="h-10 rounded-xl"
+                            />
+                            <div className="h-px w-3 bg-slate-300 dark:bg-slate-700 shrink-0" />
+                            <CustomDatePicker 
+                                date={endDate} 
+                                onChange={setEndDate} 
+                                placeholder="End" 
+                                className="h-10 rounded-xl"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex items-end gap-2">
+                        <Button 
+                            className="flex-1 h-10 rounded-xl font-bold gap-2 shadow-lg shadow-primary/10"
+                            onClick={() => {
+                                onSearch();
+                                setIsCollapsed(true);
+                            }}
+                        >
+                            <Search className="h-4 w-4" />
+                            Apply Filters
+                        </Button>
+                        <Button 
+                            variant="outline" 
+                            className="h-10 w-10 rounded-xl shrink-0" 
+                            onClick={clearFilters}
+                            title="Reset Filters"
+                        >
+                            <RotateCcw className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

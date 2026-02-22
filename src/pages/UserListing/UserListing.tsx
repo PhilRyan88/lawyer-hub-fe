@@ -137,7 +137,7 @@ export default function UserListing() {
   ];
 
   return (
-        <div className="space-y-6">
+        <div className="space-y-6 p-5">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">User Management</h1>
                 <Button onClick={openAddModal}>
@@ -145,7 +145,7 @@ export default function UserListing() {
                 </Button>
             </div>
 
-            <div className="bg-background rounded-md border">
+            <div className="bg-background rounded-2xl border p-3">
                  {isLoading ? <div className="p-4">Loading...</div> : (
                     <DataTable 
                         columns={columns} 
