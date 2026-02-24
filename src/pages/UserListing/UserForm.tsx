@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -39,6 +40,9 @@ type UserFormProps = {
 };
 
 export function UserForm({ initialData, onSubmit, isLoading }: UserFormProps) {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const form = useForm<z.infer<typeof userSchema>>({
     resolver: zodResolver(userSchema),
     defaultValues: {
@@ -117,7 +121,16 @@ export function UserForm({ initialData, onSubmit, isLoading }: UserFormProps) {
                 <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                    <Input type="password" placeholder={initialData ? "Leave blank to keep" : "Password"} {...field} />
+                    <div className="relative">
+                        <Input type={showPassword ? "text" : "password"} placeholder={initialData ? "Leave blank to keep" : "Password"} className="pr-10" {...field} />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                    </div>
                 </FormControl>
                 <FormMessage />
                 </FormItem>
@@ -130,7 +143,16 @@ export function UserForm({ initialData, onSubmit, isLoading }: UserFormProps) {
                 <FormItem>
                 <FormLabel>Confirm Password</FormLabel>
                 <FormControl>
-                    <Input type="password" placeholder="Confirm Password" {...field} />
+                    <div className="relative">
+                        <Input type={showConfirmPassword ? "text" : "password"} placeholder="Confirm Password" className="pr-10" {...field} />
+                        <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                    </div>
                 </FormControl>
                 <FormMessage />
                 </FormItem>
