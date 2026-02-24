@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Scale } from "lucide-react";
+import { Scale, Eye, EyeOff } from "lucide-react";
 
 const formSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -27,6 +27,7 @@ const formSchema = z.object({
   export default function Login() {
   const navigate = useNavigate();
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [login, { isLoading }] = useLoginMutation();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -45,7 +46,7 @@ const formSchema = z.object({
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.role);
       
-      navigate("/dashboard");
+      navigate("/calendar");
     } catch (err: any) {
       setError(err?.data?.message || err.message || "Login failed");
     }
@@ -128,12 +129,25 @@ const formSchema = z.object({
                         <FormItem>
                           <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Password</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="password" 
-                              placeholder="••••••••" 
-                              className="h-12 bg-white/5 border-white/10 rounded-2xl focus:bg-white/10 focus:ring-primary/20 focus:border-primary/40 transition-all font-medium text-white placeholder:text-slate-600"
-                              {...field} 
-                            />
+                            <div className="relative">
+                              <Input 
+                                type={showPassword ? "text" : "password"} 
+                                placeholder="••••••••" 
+                                className="h-12 bg-white/5 border-white/10 rounded-2xl focus:bg-white/10 focus:ring-primary/20 focus:border-primary/40 transition-all font-medium text-white placeholder:text-slate-600 pr-10"
+                                {...field} 
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500  transition-colors"
+                              >
+                                {showPassword ? (
+                                  <EyeOff className="h-5 w-5" />
+                                ) : (
+                                  <Eye className="h-5 w-5" />
+                                )}
+                              </button>
+                            </div>
                           </FormControl>
                           <FormMessage className="text-[10px] font-bold uppercase text-destructive/80" />
                         </FormItem>
