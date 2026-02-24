@@ -3,6 +3,7 @@ import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInte
 import { ChevronLeft, ChevronRight, Loader2, Scale, ChevronDown, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useNavigate } from "react-router-dom";
 import { useGetCalendarEventsQuery } from "./calendarApi";
@@ -191,9 +192,44 @@ export default function CalendarPage() {
                         <Button variant="ghost" size="icon" onClick={prevMonth} className="h-8 w-8 md:h-9 md:w-9 rounded-md md:rounded-lg hover:bg-white dark:hover:bg-slate-700 shadow-sm">
                             <ChevronLeft className="h-4 w-4" />
                         </Button>
-                        <span className="font-bold flex-1 md:w-40 text-center text-sm md:text-base">
-                            {format(currentDate, "MMMM yyyy")}
-                        </span>
+                        <div className="font-bold flex-1 md:w-44 flex items-center justify-center gap-1 text-sm md:text-base">
+                            <Select 
+                                value={currentDate.getMonth().toString()} 
+                                onValueChange={(value) => {
+                                    const newDate = new Date(currentDate);
+                                    newDate.setMonth(parseInt(value));
+                                    setCurrentDate(newDate);
+                                }}
+                            >
+                                <SelectTrigger className="w-auto border-none bg-transparent shadow-none hover:text-sky-600 dark:hover:text-sky-400 font-bold text-center px-1 h-auto focus:ring-0 [&>svg]:hidden">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Array.from({ length: 12 }, (_, i) => {
+                                        const date = new Date(2000, i, 1);
+                                        return <SelectItem key={i} value={i.toString()} className="font-bold">{format(date, "MMMM")}</SelectItem>;
+                                    })}
+                                </SelectContent>
+                            </Select>
+                            
+                            <Select 
+                                value={currentDate.getFullYear().toString()} 
+                                onValueChange={(value) => {
+                                    const newDate = new Date(currentDate);
+                                    newDate.setFullYear(parseInt(value));
+                                    setCurrentDate(newDate);
+                                }}
+                            >
+                                <SelectTrigger className="w-auto border-none bg-transparent shadow-none hover:text-sky-600 dark:hover:text-sky-400 font-bold text-center px-1 h-auto focus:ring-0 [&>svg]:hidden">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Array.from({ length: 13 }, (_, i) => 2018 + i).map(year => (
+                                        <SelectItem key={year} value={year.toString()} className="font-bold">{year}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                         <Button variant="ghost" size="icon" onClick={nextMonth} className="h-8 w-8 md:h-9 md:w-9 rounded-md md:rounded-lg hover:bg-white dark:hover:bg-slate-700 shadow-sm">
                             <ChevronRight className="h-4 w-4" />
                         </Button>
