@@ -33,6 +33,7 @@ export type Case = {
     stage?: string;
     nextDate?: string;
     isStarred?: boolean;
+    roleOfParty?: string;
 };
 
 export default function Dashboard() {
@@ -212,13 +213,20 @@ export default function Dashboard() {
             accessorKey: "nameOfParty",
             header: "Client & Particulars",
             cell: ({ row }) => (
-                <div className="flex flex-col">
-                    <div className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-200">
-                        <User className="h-3.5 w-3.5 text-slate-400" />
-                        {row.original.nameOfParty}
+                <div className="flex flex-col items-start justify-center">
+                    <div className="flex items-start gap-1.5 font-bold text-slate-700 dark:text-slate-200">
+                        <User className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5" />
+                        <div className="flex flex-col gap-1">
+                            <span className="truncate max-w-[150px] leading-tight">{row.original.nameOfParty}</span>
+                            {row.original.roleOfParty && (
+                                <Badge variant="outline" className="whitespace-nowrap text-[9px] h-4 py-0 px-1.5 tracking-wider uppercase bg-sky-500/5 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400 border-sky-500/20 w-fit">
+                                    {row.original.roleOfParty}
+                                </Badge>
+                            )}
+                        </div>
                     </div>
                     {row.original.particulars && (
-                        <div className="text-[11px] text-slate-400 font-medium truncate max-w-[150px] ml-5">
+                        <div className="text-[11px] text-slate-400 font-medium truncate max-w-[150px] ml-5 mt-1">
                             {row.original.particulars}
                         </div>
                     )}
