@@ -54,29 +54,21 @@ const formSchema = z.object({
 
   return (
     <div className="relative min-h-screen w-full flex flex-col items-center justify-center p-4 overflow-hidden bg-[#030712]">
-      {/* Luxury Dark Mirror Background */}
       <div className="absolute inset-0 z-0 select-none">
-        {/* Base Slate Texture */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#0f172a_0%,#030712_100%)]" />
         
-        {/* High-Clarity Reflective Glass Beams */}
         <div className="absolute inset-0 overflow-hidden">
-          {/* Main Reflective Streak */}
           <div className="absolute top-[30%] -left-[20%] w-[140%] h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent rotate-[-5deg] animate-[reflect_15s_ease-in-out_infinite]" />
-          {/* Secondary Accent Streak */}
           <div className="absolute top-[60%] -right-[20%] w-[140%] h-[1px] bg-gradient-to-l from-transparent via-sky-500/20 to-transparent rotate-[-5deg] animate-[reflect_12s_ease-in-out_infinite_reverse]" />
           
-          {/* Moving Light Polish - High Clarity */}
           <div className="absolute inset-0 bg-[linear-gradient(115deg,transparent_30%,rgba(255,255,255,0.02)_45%,rgba(255,255,255,0.05)_50%,rgba(255,255,255,0.02)_55%,transparent_70%)] bg-[length:200%_100%] animate-[sheen_20s_linear_infinite]" />
         </div>
 
-        {/* Ultra-Fine Pinstripe Grid - Professional & Sharp */}
         <div className="absolute inset-0 opacity-[0.15] bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:100%_40px]" />
         
-        {/* Subtle sharp grain for premium finish */}
+
         <div className="absolute inset-0 opacity-[0.02] mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
         
-        {/* Corner Depth Shadows */}
         <div className="absolute inset-0 shadow-[inset_0_0_150px_rgba(0,0,0,0.8)]" />
       </div>
 

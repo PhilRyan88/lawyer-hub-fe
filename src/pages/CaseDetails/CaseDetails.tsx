@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import {  MessageSquare, Printer, Bell, ArrowLeft, Edit2, Trash, Plus, Phone, MapPin, Scale, Hash, Calendar as CalendarIcon, User, Info, Gavel } from "lucide-react";
+import {  MessageSquare, Printer, Bell, ArrowLeft, Edit2, Trash, Plus, Phone, MapPin, Scale, Hash, Calendar as CalendarIcon, User, Info, Gavel, FileText } from "lucide-react";
 import { 
     useGetCaseQuery, 
     useAddHearingMutation, 
@@ -628,52 +628,82 @@ export default function CaseDetails() {
                             </div>
                         )}
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {contacts.map((contact: any) => (
-                                <div key={contact._id} className="bg-card rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col h-full hover:shadow-md transition-shadow">
-                                    <div className="flex-1 space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <div className="bg-green-100 p-2 rounded-full">
-                                                    <MessageSquare className="h-4 w-4 text-green-600" />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {contacts.map((contact: any) => {
+                                const contactDocsCount = documents.filter((d: any) => d.contactId === contact._id).length;
+                                return (
+                                <div key={contact._id} className="group relative bg-white dark:bg-slate-900 rounded-[28px] p-6 shadow-sm hover:shadow-xl hover:shadow-sky-500/10 transition-all duration-300 border border-slate-200 dark:border-slate-800 flex flex-col h-full overflow-hidden">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-sky-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                                    
+                                    <div className="flex-1 space-y-5 relative z-10">
+                                        <div className="flex items-start justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-5">
+                                            <div className="flex items-center gap-4">
+                                                <div className="h-12 w-12 shrink-0 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-sm">
+                                                    <MessageSquare className="h-6 w-6" />
                                                 </div>
-                                                <span className="font-bold text-lg text-slate-800">{contact.whatsappNo}</span>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-0.5">Primary Contact</span>
+                                                    <span className="font-bold text-xl text-slate-800 dark:text-slate-100 leading-none">{contact.whatsappNo}</span>
+                                                </div>
                                             </div>
-                                            <Badge 
-                                                variant="secondary" 
-                                                className="text-[10px] bg-green-50 text-green-700 hover:bg-green-100 cursor-pointer uppercase font-black" 
+                                            <Button 
                                                 onClick={() => openWhatsApp(contact.whatsappNo)}
+                                                size="sm"
+                                                className="h-9 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25 font-bold px-5 transition-all active:scale-[0.98]"
                                             >
-                                                Chat
-                                            </Badge>
+                                                CHAT
+                                            </Button>
                                         </div>
                                         
-                                        <div className="space-y-2 pt-2">
+                                        <div className="space-y-3">
+                                            {/* Details Section */}
                                             {contact.alternativeNo && (
-                                                <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                                                    <Phone className="h-3 w-3" />
-                                                    <span>Alt: {contact.alternativeNo}</span>
+                                                <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/80 hover:border-sky-100 dark:hover:border-sky-900/50 transition-colors">
+                                                    <Phone className="h-5 w-5 text-sky-500 flex-shrink-0" />
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Alt Number</span>
+                                                        <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{contact.alternativeNo}</span>
+                                                    </div>
                                                 </div>
                                             )}
+                                            
                                             {contact.address && (
-                                                <div className="flex items-start gap-2 text-muted-foreground text-sm">
-                                                    <MapPin className="h-3 w-3 mt-1 shrink-0" />
-                                                    <span className="line-clamp-2">{contact.address}</span>
+                                                <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/80 hover:border-sky-100 dark:hover:border-sky-900/50 transition-colors">
+                                                    <MapPin className="h-5 w-5 text-rose-500 mt-1 flex-shrink-0" />
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Address</span>
+                                                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 line-clamp-2 leading-snug">{contact.address}</span>
+                                                    </div>
                                                 </div>
                                             )}
+                                            
+                                            {/* Documents Info */}
+                                            <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/80 hover:border-sky-100 dark:hover:border-sky-900/50 transition-colors">
+                                                <FileText className="h-5 w-5 text-amber-500 flex-shrink-0" />
+                                                <div className="flex flex-col">
+                                                    <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Documents</span>
+                                                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                                                        {contactDocsCount > 0 ? `${contactDocsCount} Document(s) Collected` : "No Documents"}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     
-                                    <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-50">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-red-500 hover:bg-red-50 rounded-lg text-slate-400" onClick={() => handleDeleteContact(contact._id)}>
-                                            <Trash className="h-4 w-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-sky-500 hover:bg-sky-50 rounded-lg text-slate-400" onClick={() => startEditContact(contact)}>
-                                            <Edit2 className="h-4 w-4" />
-                                        </Button>
+                                    <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between relative z-10">
+                                        <span className="text-xs font-black uppercase tracking-widest text-slate-400">Manage</span>
+                                        <div className="flex gap-2.5">
+                                            <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-slate-200 dark:border-slate-700 hover:border-red-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-500 transition-all shadow-sm" onClick={() => handleDeleteContact(contact._id)}>
+                                                <Trash className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-slate-200 dark:border-slate-700 hover:border-sky-500 hover:text-sky-500 hover:bg-sky-50 dark:hover:bg-sky-900/20 text-slate-500 transition-all shadow-sm" onClick={() => startEditContact(contact)}>
+                                                <Edit2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 </TabsContent>
