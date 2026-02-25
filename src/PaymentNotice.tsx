@@ -229,7 +229,7 @@ export default function PaymentNotice() {
         </p>
 
 
-        <p className="text-sm text-muted-foreground text-white!">Once you complete, you will automatically get access only by 7pm!!!</p>
+        <p className="text-sm text-muted-foreground text-white!">Once you complete, you will automatically get access within 10minutes!!!</p>
         <p className="text-sm text-muted-foreground text-white! text-end mt-10"> - Aditya Sooraj</p>
       </div>
     </div>
