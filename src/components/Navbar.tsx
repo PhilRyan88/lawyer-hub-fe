@@ -110,7 +110,7 @@ export function Navbar() {
                         <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center">
                             <Scale className="h-5 w-5 text-primary" />
                         </div>
-                        <span className="text-xl font-black">Lawyer<span className="text-primary">Hub</span></span>
+                        <span className="text-xl font-black">Z.A Sukul Khadar & Associates</span>
                     </div>
                     
                     <div className="flex flex-col gap-1 p-3 flex-1 overflow-auto">
