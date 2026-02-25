@@ -222,14 +222,15 @@ export default function PaymentNotice() {
 
         <div className="divider" />
 
-        <p className="subtext">
-          Your complimentary 2-day trial has now come to an end. To retain full
+        <p className="subtext text-white!">
+          Your complimentary 3-day trial has now come to an end. To retain full
           access and continue enjoying all features, please complete your
           remaining payment at your earliest convenience.
         </p>
 
 
-        <p className="footer-note">Once you complete, you will automatically get access only by 7pm!!!</p>
+        <p className="text-sm text-muted-foreground text-white!">Once you complete, you will automatically get access only by 7pm!!!</p>
+        <p className="text-sm text-muted-foreground text-white! text-end mt-10"> - Aditya Sooraj</p>
       </div>
     </div>
   );
