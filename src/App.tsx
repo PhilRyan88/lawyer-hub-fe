@@ -1,25 +1,24 @@
-// import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
-import PaymentNotice from "./PaymentNotice";
-// import Login from "@/pages/Login/Login";
-// import Dashboard from "@/pages/Dashboard/Dashboard";
-// // Toaster not installed yet
+import Login from "@/pages/Login/Login";
+import Dashboard from "@/pages/Dashboard/Dashboard";
+// Toaster not installed yet
 
-// import { ProtectedRoute } from "@/components/ProtectedRoute";
-// import UserListing from "@/pages/UserListing/UserListing";
-// import CaseDetails from "@/pages/CaseDetails/CaseDetails";
-// import MissedDate from "@/pages/MissedDate/MissedDate";
-// import CalendarPage from "@/pages/Calendar/CalendarPage";
-// import DropdownsPage from "@/pages/Dropdowns/DropdownsPage";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import UserListing from "@/pages/UserListing/UserListing";
+import CaseDetails from "@/pages/CaseDetails/CaseDetails";
+import MissedDate from "@/pages/MissedDate/MissedDate";
+import CalendarPage from "@/pages/Calendar/CalendarPage";
+import DropdownsPage from "@/pages/Dropdowns/DropdownsPage";
 
-// import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 
-// import { MainLayout } from "@/layouts/MainLayout";
+import { MainLayout } from "@/layouts/MainLayout";
 
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="lawyer-hub-theme">
-      {/* <Router>
+      <Router>
         <Toaster />
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -41,8 +40,7 @@ function App() {
 
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
-      </Router> */}
-<PaymentNotice/>
+      </Router>
     </ThemeProvider>
   );
 }
