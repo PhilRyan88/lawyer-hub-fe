@@ -20,6 +20,7 @@ interface CustomSelectProps {
   value?: string
   onChange: (value: string) => void
   disabled?: boolean
+  inForm?: boolean
 }
 
 export function CustomSelect({
@@ -28,15 +29,24 @@ export function CustomSelect({
   className,
   value,
   onChange,
-  disabled
+  disabled,
+  inForm = true
 }: CustomSelectProps) {
+  const trigger = (
+    <SelectTrigger className={className}>
+      <SelectValue placeholder={placeholder} />
+    </SelectTrigger>
+  )
+
   return (
     <Select onValueChange={onChange} defaultValue={value} value={value} disabled={disabled}>
-      <FormControl>
-        <SelectTrigger className={className}>
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-      </FormControl>
+      {inForm ? (
+        <FormControl>
+          {trigger}
+        </FormControl>
+      ) : (
+        trigger
+      )}
       <SelectContent>
         {options.map((option) => (
           <SelectItem key={option.value} value={option.value}>
