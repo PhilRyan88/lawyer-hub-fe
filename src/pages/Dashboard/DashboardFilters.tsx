@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CustomDatePicker } from "@/components/CustomDatePicker";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Check, ChevronsUpDown, X, Filter, Search, RotateCcw, Star } from "lucide-react";
-import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { Command, CommandGroup, CommandItem, CommandList, CommandInput, CommandEmpty } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -53,8 +53,10 @@ function MultiSelect({ options, selected, onChange, placeholder }: any) {
             </PopoverTrigger>
             <PopoverContent className="w-64 p-0 rounded-2xl overflow-hidden border-slate-200 dark:border-slate-800 shadow-2xl" align="start">
                 <Command className="bg-background">
+                    <CommandInput placeholder={`Search ${placeholder.toLowerCase()}...`} />
                     <CommandList>
-                        <CommandGroup className="max-h-64">
+                        <CommandEmpty>No option found.</CommandEmpty>
+                        <CommandGroup>
                             {options.map((option: any) => (
                                 <CommandItem
                                     key={option.value}
