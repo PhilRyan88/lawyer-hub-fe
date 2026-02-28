@@ -6,6 +6,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Check, ChevronsUpDown, X, Filter, Search, RotateCcw, Star } from "lucide-react";
 import { Command, CommandGroup, CommandItem, CommandList, CommandInput, CommandEmpty } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
+import { CustomSelect } from "@/components/CustomSelect";
 import { cn } from "@/lib/utils";
 
 // MultiSelect for Courts with refined styling
@@ -92,18 +93,20 @@ export function DashboardFilters({
     startDate, setStartDate,
     endDate, setEndDate,
     isStarred, setIsStarred,
+    statusFilter, setStatusFilter,
     onSearch
 }: any) {
     const [isCollapsed, setIsCollapsed] = React.useState(true);
     const courtOptions = courts.map((c: any) => ({ label: c.name, value: c.name }));
 
-    const hasActiveFilters = selectedCourts.length > 0 || startDate || endDate || isStarred;
+    const hasActiveFilters = selectedCourts.length > 0 || startDate || endDate || isStarred || statusFilter !== "";
 
     const clearFilters = () => {
         setSelectedCourts([]);
         setStartDate(undefined);
         setEndDate(undefined);
         setIsStarred(false);
+        setStatusFilter("");
     };
 
     const toggleStar = () => {
@@ -159,7 +162,7 @@ export function DashboardFilters({
                                 "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-black",
                                 isCollapsed ? "bg-primary text-primary-foreground" : "bg-white text-primary"
                             )}>
-                                { (selectedCourts.length > 0 ? 1 : 0) + (startDate ? 1 : 0) + (endDate ? 1 : 0) }
+                                { (selectedCourts.length > 0 ? 1 : 0) + (startDate ? 1 : 0) + (endDate ? 1 : 0) + (statusFilter !== "" ? 1 : 0) }
                             </span>
                         )}
                     </Button>
@@ -168,7 +171,26 @@ export function DashboardFilters({
 
             {/* Collapsible Advanced Filters */}
             {!isCollapsed && (
-                <div className="grid grid-cols-1 md:grid-cols-[1.5fr_2.5fr_auto] gap-6 p-6 rounded-[24px] bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800/50 shadow-inner animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_1.5fr_2.5fr_auto] gap-6 p-6 rounded-[24px] bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800/50 shadow-inner animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Status</label>
+                        <CustomSelect
+                            inForm={false}
+                            value={statusFilter || "all"}
+                            onChange={(val) => {
+                                setStatusFilter(val === "all" ? "" : val);
+                                onSearch();
+                            }}
+                            options={[
+                                { label: "All Cases", value: "all" },
+                                { label: "Active", value: "Active" },
+                                { label: "Disposed", value: "Disposed" }
+                            ]}
+                            placeholder="All Cases"
+                            className="h-10 rounded-xl border-slate-200 dark:border-slate-800 bg-background/50 hover:bg-background transition-colors focus:ring-primary/20"
+                        />
+                    </div>
+
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Courts</label>
                         <MultiSelect 

@@ -35,6 +35,7 @@ import { DocumentTimeline } from "./DocumentTimeline"; // Import Timeline
 import { toast } from "sonner";
 import { generateCasePDF } from "@/utils/pdfGenerator";
 import { AddEditFee } from "./AddEditFee";
+import { cn } from "@/lib/utils";
 
 
 export default function CaseDetails() {
@@ -155,6 +156,7 @@ export default function CaseDetails() {
            oppositeCounselName: lastHearing?.oppositeCounselName || caseData.oppositeCounselName,
            additionalParties: lastHearing?.additionalParties || caseData.additionalParties,
            additionalOppositeParties: lastHearing?.additionalOppositeParties || caseData.additionalOppositeParties,
+           status: lastHearing?.status || caseData.status || "Active",
         };
         
         setEditingHearing({ ...prefillData, isNew: true });
@@ -376,8 +378,16 @@ export default function CaseDetails() {
                                     <div>
                                         <h2 className="text-xl font-black text-slate-800 dark:text-white leading-tight">Case Overview</h2>
                                         <div className="flex items-center gap-2 mt-0.5">
-                                            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Live Status: Active</span>
+                                            <div className={cn(
+                                                "h-2 w-2 rounded-full",
+                                                caseData?.status === "Disposed" ? "bg-rose-500" : "bg-emerald-500 animate-pulse"
+                                            )} />
+                                            <span className={cn(
+                                                "text-[10px] font-black uppercase tracking-widest",
+                                                caseData?.status === "Disposed" ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"
+                                            )}>
+                                                Live Status: {caseData?.status || "Active"}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>

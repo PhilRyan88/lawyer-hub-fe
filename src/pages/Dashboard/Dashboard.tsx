@@ -34,6 +34,7 @@ export type Case = {
     nextDate?: string;
     isStarred?: boolean;
     roleOfParty?: string;
+    status?: string;
 };
 
 export default function Dashboard() {
@@ -47,6 +48,7 @@ export default function Dashboard() {
     const [startDate, setStartDate] = useState<Date | undefined>();
     const [endDate, setEndDate] = useState<Date | undefined>();
     const [isStarred, setIsStarred] = useState(false);
+    const [statusFilter, setStatusFilter] = useState("");
 
     // Query Params
     const queryParams = {
@@ -59,6 +61,7 @@ export default function Dashboard() {
         sortBy,
         sortOrder,
         isStarred,
+        status: statusFilter,
     };
 
     // API Hooks
@@ -237,9 +240,16 @@ export default function Dashboard() {
             accessorKey: "stage",
             header: "Current Stage",
             cell: ({ row }) => (
-                <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold border-none rounded-lg px-2 py-0.5">
-                    {row.original.stage}
-                </Badge>
+                <div className="flex flex-col gap-1 items-start">
+                    <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold border-none rounded-lg px-2 py-0.5">
+                        {row.original.stage || "N/A"}
+                    </Badge>
+                    {row.original.status === "Disposed" && (
+                        <Badge variant="outline" className="text-[9px] uppercase tracking-widest text-emerald-500 border-emerald-500/30 bg-emerald-500/10 px-1 py-0 h-4">
+                            Disposed
+                        </Badge>
+                    )}
+                </div>
             )
         },
         {
@@ -332,6 +342,8 @@ export default function Dashboard() {
                         setEndDate={setEndDate}
                         isStarred={isStarred}
                         setIsStarred={setIsStarred}
+                        statusFilter={statusFilter}
+                        setStatusFilter={setStatusFilter}
                         onSearch={() => { dispatch(setPage(1)); }}
                     />
                 </div>

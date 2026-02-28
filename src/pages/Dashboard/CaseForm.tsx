@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox"; 
+import { Switch } from "@/components/ui/switch";
 import { CustomDatePicker } from "@/components/CustomDatePicker";
 import { CreatableSelect } from "@/components/CreatableSelect";
 import { MultiSelect } from "@/components/MultiSelect"; 
@@ -44,6 +45,7 @@ const caseSchema = z.object({
   additionalOppositeParties: z.string().optional(),
   linkedCases: z.array(z.string()).optional(), 
   vakkalath: z.string().optional(),
+  status: z.string().optional(),
 });
 
 type CaseFormProps = {
@@ -83,6 +85,7 @@ export function CaseForm({ initialData, onSubmit, isLoading, isAddingHearing }: 
         additionalOppositeParties: "",
         linkedCases: [], 
         vakkalath: "",
+        status: "Active",
     };
 
     const form = useForm<z.infer<typeof caseSchema>>({
@@ -289,12 +292,27 @@ export function CaseForm({ initialData, onSubmit, isLoading, isAddingHearing }: 
                 {/* Section 4: Case Logistics & Notes */}
                 <div>
                     <SectionTitle icon={FileText} title="Current Status & Notes" description="Next steps and general observations" />
-                    <div className="grid grid-cols-1 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6 items-end">
                         <FormField control={form.control} name="stage" render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="flex-1">
                                 <FormLabel>Current Stage</FormLabel>
                                 <CreatableSelect options={stageOptions} value={field.value} onChange={field.onChange} onCreate={handleCreateStage} placeholder="Select stage..." />
                                 <FormMessage />
+                            </FormItem>
+                        )}/>
+                        <FormField control={form.control} name="status" render={({ field }) => (
+                            <FormItem className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 shadow-sm h-full max-h-[76px] min-w-[140px]">
+                                <FormLabel className="text-xs font-bold text-slate-500 mb-2 mt-1">Case Status</FormLabel>
+                                <div className="flex items-center gap-2">
+                                    <span className={cn("text-xs font-bold", field.value === "Disposed" ? "text-emerald-500" : "text-slate-400")}>Disposed</span>
+                                    <FormControl>
+                                        <Switch 
+                                            checked={field.value === "Active" || !field.value} 
+                                            onCheckedChange={(checked) => field.onChange(checked ? "Active" : "Disposed")} 
+                                        />
+                                    </FormControl>
+                                    <span className={cn("text-xs font-bold", field.value === "Active" || !field.value ? "text-sky-500" : "text-slate-400")}>Active</span>
+                                </div>
                             </FormItem>
                         )}/>
                     </div>
